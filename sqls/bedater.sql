@@ -176,6 +176,7 @@ CREATE TABLE IF	NOT EXISTS debate.debate_participant_teams_details_master
 		id serial primary key not null,
 		debate_id integer not null references debate.debate_master(id),
 		team_name varchar(200),
+		team_side varchar(10),
 		image_path varchar(500),
 		generated integer not null default extract(epoch from now()),
 		created_by integer not null references auth.user_master(id)
@@ -221,7 +222,8 @@ CREATE TABLE IF NOT EXISTS debate.advance_debate_details_master
 		id serial primary key not null,
 		debate_id integer not null references debate.debate_master(id),
 		topic_id integer not null references debate.topic_master(id),
-		action_side varchar(100),
+		-- action_side varchar(100),
+		team_id integer not null references debate.debate_participant_teams_details_master(id),
 		voting_type integer not null references vote.vote_type_master(id),
 		voting_allowed boolean not null default true,
 		generated integer not null default extract(epoch from now()),

@@ -62,7 +62,7 @@ class CounterMasterStatementsInputSchema(BaseModel):
 class AdvanceDebateDetailsMasterInputSchema(BaseModel):
 	debate_id:int
 	topic_id:int
-	action_side:str
+	team_id:int
 	voting_type:int
 	voting_allowed:bool
 	created_by:int
