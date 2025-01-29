@@ -5,7 +5,6 @@ from app.schemas.debate.debate_input_schema import CreateDebateInputSchema
 from app.api_v1.deps.user_deps import get_current_user
 from app.models.auth.UserMaster import UserMaster
 from app.services.DebateServices import DebateServices
-from app.api_v1.deps.db import get_db
 
 debate_router = APIRouter()
 

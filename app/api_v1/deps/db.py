@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 # from app.api_v1.deps.user_deps import get_current_user
 
 DATABASE_URL = settings.DATABASE_URL + "?client_encoding=utf8"
-engine = create_engine(DATABASE_URL,echo=True)
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():

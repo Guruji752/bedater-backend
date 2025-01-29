@@ -10,6 +10,7 @@ from app.models.debate.DebateMaster import DebateMaster
 from app.services.FreeStyleServices import FreeStyleServices
 from app.services.IntermediateStyleServices import IntermediateStyleService
 from app.services.AdvanceStyleServices import AdvanceStyleService
+from app.services.ParticipantsTeamsServices import ParticipantsTeamsServices
 class DebateServices:
 
 	@staticmethod
@@ -34,12 +35,16 @@ class DebateServices:
 			db.flush()
 			debate_id = debate_master.id
 			data_dict['debate_id'] = debate_id
+			participant_details = await ParticipantsTeamsServices.create_participant_teams_details(debate_id,user_id,db)
+			if not participant_details['status']:
+				raise f"Something went wrong!"
+			teams_details = participant_details['data']
 			if debate_type.type == DebateType.FREESTYLE.value:
 				return await FreeStyleServices.create_freestyle(data_dict,user_id,db)
 			if debate_type.type == DebateType.ADVANCE.value:
-				return await AdvanceStyleService.create_advance(data_dict,user_id,db)
+				return await AdvanceStyleService.create_advance(data_dict,user_id,teams_details,db)
 			if debate_type.type == DebateType.INTERMEDIATE.value:
-				return await IntermediateStyleService.create_intermediate(data_dict,user_id,db)
+				return await IntermediateStyleService.create_intermediate(data_dict,user_id,teams_details,db)
 
 		except Exception as e:
 			raise e
