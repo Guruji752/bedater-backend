@@ -1,0 +1,47 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from app.api_v1.deps.db_deps import get_transaction_session
+from sqlalchemy.orm import Session
+from app.schemas.debate.debate_input_schema import CreateDebateInputSchema,CreateDebateBaseInputSchema,DebateMasterInputSchema
+from app.models.debate.DebateTypeMaster import DebateTypeMaster
+from app.utils.enums import DebateType
+from app.services.FreeStyleServices import FreeStyleServices
+from app.utils.common import generate_room_id,generate_codes
+from app.models.debate.DebateMaster import DebateMaster
+from app.services.FreeStyleServices import FreeStyleServices
+from app.services.IntermediateStyleServices import IntermediateStyleService
+from app.services.AdvanceStyleServices import AdvanceStyleService
+class DebateServices:
+
+	@staticmethod
+	async def create_debate_service(data:CreateDebateInputSchema,db,user):
+		user_id = user.id
+		data_dict = data.dict()
+		common = data_dict['common_details']
+		debate_type_id = common['debate_type_id']
+		debate_type = db.query(DebateTypeMaster).filter(DebateTypeMaster.id == debate_type_id,DebateTypeMaster.is_active == True).first()
+		room_id = generate_room_id()
+		participants_code,audience_code = generate_codes()
+		debate_base_details = CreateDebateBaseInputSchema(**common)
+		debate_base_details_dict = debate_base_details.dict()
+		debate_base_details_dict['room_id'] = room_id
+		debate_base_details_dict['participants_code'] = participants_code
+		debate_base_details_dict['audience_code'] = audience_code
+		debate_base_details_dict['created_by'] = user_id
+		debate_master_input = DebateMasterInputSchema(**debate_base_details_dict)
+		debate_master = DebateMaster(**debate_master_input.dict())
+		try:
+			db.add(debate_master)
+			db.flush()
+			debate_id = debate_master.id
+			data_dict['debate_id'] = debate_id
+			if debate_type.type == DebateType.FREESTYLE.value:
+				return await FreeStyleServices.create_freestyle(data_dict,user_id,db)
+			if debate_type.type == DebateType.ADVANCE.value:
+				return await AdvanceStyleService.create_advance(data_dict,user_id,db)
+			if debate_type.type == DebateType.INTERMEDIATE.value:
+				return await IntermediateStyleService.create_intermediate(data_dict,user_id,db)
+
+		except Exception as e:
+			raise e
+
+
