@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.settings.config import settings
 from app.api_v1.routers import approuter
+from app.websockets.sockets import sio
+import socketio
+
 
 
 app = FastAPI(
@@ -18,5 +21,4 @@ app.add_middleware(
 )
 
 app.include_router(approuter, prefix=settings.API_V1_STR)
-
-
+app.mount("/socket.io", socketio.ASGIApp(sio, app))
