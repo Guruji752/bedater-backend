@@ -18,7 +18,8 @@ reuseable_oauth = OAuth2PasswordBearer(
 )
 
 async def get_current_user(request: Request, token: str = Depends(reuseable_oauth), db: Session = Depends(get_db)):
-    try: 
+    try:
+        # import pdb;pdb.set_trace()
         from app.services.AuthServices import AuthServices
         payload = jwt.decode(
             token, settings.JWT_SECRET_KEY, algorithms=[settings.ALGORITHM]
@@ -38,10 +39,7 @@ async def get_current_user(request: Request, token: str = Depends(reuseable_oaut
         )
     token_data = token_data.sub
     obj = token_data.replace("'", '"').replace("None", "null").replace("False", "false").replace("True", "true")
-    obj = json.loads(obj)
-
-    # username =  None
-   
+    obj = json.loads(obj)   
     user_id = obj["user_id"]
     user = await AuthServices.get_user_by_user_id(user_id, db)
     if not user:

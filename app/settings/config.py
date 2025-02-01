@@ -17,9 +17,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60*5*5
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7   # 7 days
     BACKEND_CORS_ORIGINS:List = [
-        
-        "http://localhost:3000",
-
+        "http://localhost:3000/"
     ]
     PROJECT_NAME: str = "BEDATER BACKEND"
     DB_USER: str = os.getenv("DB_USER")
