@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     DB_HOST: str = os.getenv("DB_HOST")
     DB_PORT: str = os.getenv("DB_PORT")
     DB_NAME: str = os.getenv("DB_NAME")
+    REDIS_HOST:str = os.getenv("REDIS_HOST")
+    
     DATABASE_URL: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     print(DATABASE_URL,"DATABASE_URL")
     

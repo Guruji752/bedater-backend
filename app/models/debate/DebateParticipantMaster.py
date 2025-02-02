@@ -14,6 +14,7 @@ class DebateParticipantMaster(Base):
     participant_type_id = Column(ForeignKey('debate.participants_type_master.id'), nullable=False)
     is_locked = Column(Boolean, nullable=False, server_default=text("false"))
     generated = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
+    is_active = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
 
     debate = relationship('DebateMaster')
     participant_type = relationship('ParticipantsTypeMaster')

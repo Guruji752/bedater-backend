@@ -9,7 +9,10 @@ from app.api_v1.deps.db import get_db
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from app.api_v1.deps.db import SessionLocal
-
+from app.api_v1.deps.user_deps import get_current_user
+from app.models.auth.UserMaster import UserMaster
+from app.services.ControllerServices import ControllerServices
+from app.services.RedisServices import RedisServices
 
 
 sio = socketio.AsyncServer(cors_allowed_origins="*",async_mode='asgi')
@@ -22,37 +25,12 @@ async def authenticate_user(token: str, db: Session):
     except HTTPException:
         return None
 
-connected_clients = set()
-
-
-# @sio.event
-# async def connect(sid, environ):
-#     try:
-#         print(f"✅ User {sid} connected")
-#         await sio.emit("connected", {"message": f"User {sid} joined!"}, room=sid)
-#     except Exception as e:
-#         print(f"❌ Error in connect: {e}")
-#         await sio.disconnect(sid)
-
-# @sio.event
-# async def send_message(sid, data):
-#     try:
-#         print(f"📩 Received message from {sid}: {data}")
-#         await sio.emit("message_received", data, skip_sid=sid)  # Send to all except sender
-#     except Exception as e:
-#         print(f"❌ Error in send_message: {e}")
-
-# @sio.event
-# async def disconnect(sid):
-#     try:
-#         print(f"❌ User {sid} disconnected")
-#         connected_clients.discard(sid)
-#     except Exception as e:
-#         print(f"❌ Error in disconnect: {e}")
 
 @sio.event
 async def connect(sid, environ):
-
+    '''
+        This connect must be fired only after user is locked for debate
+    '''
     db=SessionLocal()
     try:
         query_string = environ.get("asgi.scope", {}).get("query_string", b"").decode()
@@ -61,9 +39,8 @@ async def connect(sid, environ):
         token = query_params.get("token")
         room_id = query_params.get("room_id")
         if not token:
-            print("No token")
             await sio.disconnect(sid)
-            return
+            return {"msg":"No token exist"}
         user = await authenticate_user(token,db)
 
         if not user:
@@ -78,6 +55,12 @@ async def connect(sid, environ):
         print(f"User {user.username} connected with SID {sid} and joined room {room_id}")
         await sio.enter_room(sid, room_id)
         await sio.emit("connected", {"message": f"Welcome {user.username} to the debate!"}, room=room_id)
+        startDebate = await ControllerServices.create_debate_start(room_id,db)
+        if startDebate['status']:
+            virtual_id,debate_id = startDebate['virtual_id'],startDebate['debate_id']
+
+        msg,status = await RedisServices.set_or_update_debate_virtual_id(virtual_id,user.id,debate_id,db)
+        print(f"{msg},{status}")
     finally:
         print("DB Session closed")
         db.close()
@@ -98,6 +81,63 @@ async def send_message(sid, data):
     print(f"User {user_details.username} sent message: {data['message']} in room {room_id}")
     await sio.emit("message_received", {"message": data["message"]}, room=room_id)
 
+
+@sio.event
+async def set_debate_timer_and_status(sid,data):
+    '''
+        This will set the current running status of debate
+        and will set the timer for the first time.
+    '''
+    try:
+        db=SessionLocal()
+        user = active_users.get(sid)
+        if not user:
+            await sio.emit("error", {"message": "Unauthorized"})
+            return
+        user_details = user.get('user')
+        room_id = user.get("room_id")
+        if not room_id:
+            await sio.emit("error", {"message": "Room ID not found"})
+            return
+       
+
+        debateTimerAndStatus = await RedisServices.setDebateTimerAndStatusDetails(virtual_id,db)
+        if debateTimerAndStatus["status"]:
+            current_status = debateTimerAndStatus["current_status"]
+            await sio.emit("debate_start_time", {"current_status": current_status}, room=room_id)
+
+
+    finally:
+        print("DB connection closed")
+        db.close()
+
+@sio.event
+async def current_debate_remaining_time(sid,data):
+    try:
+        db=SessionLocal()
+        user = active_users.get(sid)
+        if not user:
+            await sio.emit("error", {"message": "Unauthorized"})
+            return {"msg":"No user found"}
+        room_id = data.get("room_id")
+        if not room_id:
+            await sio.emit("error", {"message": "Room ID not found"})
+            return {"msg":"No room found"}
+        startDebate = await ControllerServices.create_debate_start(room_id,db)
+        if startDebate['status']:
+            virtual_id,debate_id = startDebate['virtual_id'],startDebate['debate_id']          
+            curreDebateRemainigEpochDiff = await RedisServices.currentDebateRemaingTime(virtual_id,db)
+            current_debate_time = curreDebateRemainigEpochDiff["epoch_diff"]
+            await sio.emit("debate_start_time",{"current_debate_time":current_debate_time}, room=room_id)
+    finally:
+        print("DB closed")
+        db.close()
+
+
+
+    
+
+
 @sio.event
 async def vote(sid, data):
     user = active_users.get(sid)
@@ -115,6 +155,7 @@ async def vote(sid, data):
     await sio.emit("vote_received", {"user": user.username, "vote": vote}, room=room_id)
 
 
+
 @sio.event
 async def timer_control(sid, data):
     user = active_users.get(sid)
@@ -129,6 +170,7 @@ async def timer_control(sid, data):
     action = data["action"]
     print(f"User {user.username} {action}ed the timer in room {data['room_id']}")
     await sio.emit("timer_status", {"action": action}, room=data["room_id"])
+
 
 
 @sio.event

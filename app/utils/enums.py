@@ -10,3 +10,9 @@ class DebateType(Enum):
 class TeamSides(Enum):
 
 	SIDE=['LEFT','RIGHT']
+
+class ParticipantsType(Enum):
+
+	DEBATER='DEBATER'
+	AUDIENCE='AUDIENCE'
+	MEDIATOR='MEDIATOR'
