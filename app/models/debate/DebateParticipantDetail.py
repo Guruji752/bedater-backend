@@ -13,6 +13,7 @@ class DebateParticipantDetail(Base):
     joined_team = Column(ForeignKey('debate.debate_participant_teams_details_master.id'), nullable=False)
     debate_id = Column(ForeignKey('debate.debate_master.id'), nullable=False)
     generated = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
+    is_active = Column(Boolean, nullable=False, server_default=text("true"))
 
     debate = relationship('DebateMaster')
     debate_participant_teams_details_master = relationship('DebateParticipantTeamsDetailsMaster')

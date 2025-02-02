@@ -1,5 +1,10 @@
 from app.models.debate.DebateParticipantMaster import DebateParticipantMaster
 from fastapi import APIRouter, Depends, HTTPException, status
+from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
+from app.models.debate.DebateMaster import DebateMaster
+import uuid
+import time
+
 
 class ControllerServices:
 
@@ -21,3 +26,25 @@ class ControllerServices:
 				detail=f"{e}"
 			)
 	
+
+	@staticmethod
+	async def create_debate_start(room_id,db):
+		try:
+			debate = db.query(DebateMaster).filter(DebateMaster.room_id == room_id).first()
+			debate_id = debate.id
+			if_exist = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.debate_id == debate_id,DebateTrackerMaster.is_active==True).first()
+			if if_exist:
+				return {"msg":"Debate is already running","status":True,"virtual_id":if_exist.virtual_id,"debate_id":if_exist.debate_id}
+			virtual_id = str(uuid.uuid4())
+			started_at = int(time.time())
+			data = {"debate_id":debate_id,"virtual_id":virtual_id,"started_at":started_at}
+			debate = DebateTrackerMaster(**data)
+			db.add(debate)
+			db.commit()
+			db.refresh(debate)
+			return {"msg":"Debate start has beed create","status":True,"virtual_id":virtual_id,"debate_id":debate_id}
+		except Exception as e:
+			raise HTTPException(
+				status_code=status.HTTP_400_BAD_REQUEST,
+				detail=f"{e}"
+			)

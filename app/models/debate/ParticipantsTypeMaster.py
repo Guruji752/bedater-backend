@@ -10,7 +10,7 @@ class ParticipantsTypeMaster(Base):
 
     id = Column(Integer, primary_key=True, server_default=text("nextval('debate.participants_type_master_id_seq'::regclass)"))
     participant_type = Column(String(100))
-    is_active = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
+    is_active = Column(Boolean, nullable=False, server_default=text("true"))
     generated = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
     created_by = Column(ForeignKey('auth.user_master.id'), nullable=False)
 

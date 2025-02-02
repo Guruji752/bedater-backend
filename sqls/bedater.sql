@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS debate.debate_cost_master
 		price numeric(10,2) not null,
 		debate_type_id integer not null references debate.debate_type_master(id),
 		generated integer not null default extract(epoch from now()),
-		is_active integer not null default extract(epoch from now()),
+		is_active boolean not null default true,
 		created_by integer not null references auth.user_master(id)
 
 			
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS debate.participants_type_master
 	(
 		id serial primary key not null,
 		participant_type varchar(100),
-		is_active integer not null default extract(epoch from now()),
+		is_active boolean not null default true,
 		generated integer not null default extract(epoch from now()),
 		created_by integer not null references auth.user_master(id)
 
@@ -166,7 +166,8 @@ CREATE TABLE IF	 NOT EXISTS debate.debate_participant_master
 		user_id integer not null references auth.user_master(id),
 		participant_type_id integer not null references debate.participants_type_master(id),
 		is_locked boolean not null default false,
-		generated integer not null default extract(epoch from now())
+		generated integer not null default extract(epoch from now()),
+		is_active boolean not null default true
 
 	);
 
@@ -179,7 +180,8 @@ CREATE TABLE IF	NOT EXISTS debate.debate_participant_teams_details_master
 		team_side varchar(10),
 		image_path varchar(500),
 		generated integer not null default extract(epoch from now()),
-		created_by integer not null references auth.user_master(id)
+		created_by integer not null references auth.user_master(id),
+		is_active boolean not null default True
 
 	);
 
@@ -190,7 +192,8 @@ CREATE TABLE IF	 NOT EXISTS debate.debate_participant_details
 		participant_id integer not null references debate.debate_participant_master(id),
 		joined_team integer not null references debate.debate_participant_teams_details_master(id),
 		debate_id integer not null references debate.debate_master(id),
-		generated integer not null default extract(epoch from now())
+		generated integer not null default extract(epoch from now()),
+		is_active boolean not null default True
 	);
 
 
@@ -242,5 +245,14 @@ CREATE TABLE IF NOT EXISTS debate.advance_debate_topic_time_master
 		generated integer not null default extract(epoch from now()),
 		created_by integer not null references auth.user_master(id)
 
+	);
+
+CREATE TABLE IF NOT EXISTS debate.debate_tracker_master
+	(
+		id serial primary key not null,
+		debate_id integer not null references debate.debate_master(id),
+		virtual_id varchar(500),
+		started_at integer,
+		is_active boolean not null default True
 	);
 COMMIT WORK;

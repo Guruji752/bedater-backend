@@ -13,3 +13,4 @@ class DebateParticipantsMasterInputSchema(BaseModel):
 	debate_id:int
 	participant_type_id:int
 	user_id:int
+	is_locked:bool

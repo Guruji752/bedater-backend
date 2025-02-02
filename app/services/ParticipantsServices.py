@@ -2,39 +2,71 @@ from app.models.debate.ParticipantsTypeMaster import ParticipantsTypeMaster
 from app.schemas.participant.participant_input_schema import ParticipantInputSchema,DebateParticipantsMasterInputSchema
 from app.models.debate.DebateParticipantMaster import DebateParticipantMaster
 from fastapi.encoders import jsonable_encoder
+from fastapi import HTTPException, status
 from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
 
 class ParticipantsService:
 
 	@staticmethod
 	async def create_participants_service(data,db,user):
-		user_id = user.id
-		data_dict = data.dict()
-		joined_team = data_dict['joined_team']
-		debate_id = data_dict['debate_id']
-		data_dict['user_id'] = user_id
-		debate_participant_inputs = DebateParticipantsMasterInputSchema(**data_dict)
-		participant_data = DebateParticipantMaster(**debate_participant_inputs.dict())
-		db.add(participant_data)
-		db.flush()
-		participant_id = participant_data.id
-		participant_type = db.query(ParticipantsTypeMaster).filter(ParticipantsTypeMaster.id == data_dict['participant_type_id']).first()
-		if participant_data.participant_type.participant_type == 'DEBATER':
-			participant_details = {"participant_id":participant_id,"joined_team":joined_team,"debate_id":debate_id}
-			return await ParticipantsService.create_participant_details(participant_details,db)
-		db.commit()
-		db.refresh(participant_data)
-		return {"msg":"User has joined successfully as Mediator!","status":200}
-		
+		try:
+			user_id = user.id
+			is_exist = await ParticipantsService.check_if_user_already_joined(user_id,db)
+			if is_exist['status']:
+				return {"msg":is_exist["msg"],"status":200}
+
+			data_dict = data.dict()
+			joined_team = data_dict['joined_team']
+			debate_id = data_dict['debate_id']
+			data_dict['user_id'] = user_id
+			data_dict['is_locked']=True
+			debate_participant_inputs = DebateParticipantsMasterInputSchema(**data_dict)
+			participant_data = DebateParticipantMaster(**debate_participant_inputs.dict())
+			db.add(participant_data)
+			db.flush()
+			participant_id = participant_data.id
+			participant_type = db.query(ParticipantsTypeMaster).filter(ParticipantsTypeMaster.id == data_dict['participant_type_id']).first()
+			if participant_data.participant_type.participant_type == 'DEBATER':
+				participant_details = {"participant_id":participant_id,"joined_team":joined_team,"debate_id":debate_id}
+				return await ParticipantsService.create_participant_details(participant_details,db)
+			db.commit()
+			db.refresh(participant_data)
+			return {"msg":"User has joined successfully as Mediator!","status":200}
+		except Exception as e:
+			raise HTTPException(
+				status_code = status.HTTP_400_BAD_REQUEST,
+				detail=f"{e}"
+			)
+
+
+
 	@staticmethod
 	async def create_participant_details(data,db):
-		import pdb;pdb.set_trace()
-		participant_details = DebateParticipantDetail(**data)
-		db.add(participant_details)
-		db.commit()
-		db.refresh(participant_details)
-		return {"msg":"User has joined successfully as Debater!","status":200}
+		try:
+			participant_details = DebateParticipantDetail(**data)
+			db.add(participant_details)
+			db.commit()
+			db.refresh(participant_details)
+			return {"msg":"User has joined successfully as Debater!","status":200}
+		except Exception as e:
+			raise HTTPException(
+				status_code = status.HTTP_400_BAD_REQUEST,
+				detail=f"{e}"
+			)
 
+	@staticmethod
+	async def check_if_user_already_joined(user_id,db):
+		try:
+			if_exist = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.is_active == True).first()
+
+			if if_exist:
+				return {"msg":"User is already part of debate","status":True}
+			return {"status":False}
+		except Exception as e:
+			raise HTTPException(
+				status_code = status.HTTP_400_BAD_REQUEST,
+				detail=f"{e}"
+			)
 
 
 
