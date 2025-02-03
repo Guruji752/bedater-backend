@@ -15,9 +15,6 @@ class AdvanceStyleService:
 			counter_statments['debate_id'] = data_dict['debate_id']
 			counter_statments['created_by'] = user_id
 			extra_details = data_dict['extra_details']
-			# counterDataSchema = CounterMasterStatementsInputSchema(**counter_statments)
-			# counterData = CounterStatementsMaster(**counterDataSchema.dict())
-			# db.add(counterData)
 			topic_data = [{"topic":i['topic'],"debate_id":debate_id,"created_by":user_id} for i in extra_details]
 			topics_master = [TopicMaster(**data) for data in topic_data]
 			db.add_all(topics_master)
@@ -38,8 +35,6 @@ class AdvanceStyleService:
 				temp['seconds'] = details['seconds']
 				temp['created_by'] = user_id
 				advance_debate_details_master.append(temp)
-			# import pdb;pdb.set_trace()
-
 			advance_debate_details_input = [AdvanceDebateDetailsMasterInputSchema(**data) for data in advance_debate_details_master]
 			advance_debate_details = [AdvanceDebateDetailsMaster(**data.dict()) for data in advance_debate_details_input]
 			db.add_all(advance_debate_details)
