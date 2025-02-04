@@ -1,6 +1,7 @@
 from uuid import UUID
 from pydantic import BaseModel,Field
 from typing import Optional , Union , List
+from fastapi import UploadFile
 
 
 class LockParticipantsInputSchema(BaseModel):

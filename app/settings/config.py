@@ -26,7 +26,13 @@ class Settings(BaseSettings):
     DB_PORT: str = os.getenv("DB_PORT")
     DB_NAME: str = os.getenv("DB_NAME")
     REDIS_HOST:str = os.getenv("REDIS_HOST")
-    
+    AWS_ACCESS_KEY:str = os.getenv("AWS_ACCESS_KEY")
+    AWS_SECRET_KEY:str = os.getenv("AWS_SECRET_KEY")
+    AWS_BUCKET_NAME:str = os.getenv("AWS_BUCKET_NAME")
+    AWS_REGION:str = os.getenv("AWS_REGION")
+    AVATAR_IMAGE_FOLDER_NAME:str = "avatars_skin"
+
+
     DATABASE_URL: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     print(DATABASE_URL,"DATABASE_URL")
     

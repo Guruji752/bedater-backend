@@ -50,4 +50,16 @@ async def list_debate(debate_status_type_id:int,user:UserMaster=Depends(get_curr
 			detail=f"{e}"
 	)
 
+@debate_router.put("/save",summary="Save the debate")
+async def save_debate(debate_id:int,user:UserMaster=Depends(get_current_user),db:Session=Depends(get_transaction_session)):
+	try:
+		return await DebateServices.saveDebates(debate_id,user,db)
+	except Exception as e:
+		raise HTTPException(
+			status_code=status.HTTP_400_BAD_REQUEST,
+			detail=f"{e}"
+	)
+
+
+
 
