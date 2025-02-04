@@ -12,6 +12,7 @@ CREATE SCHEMA IF NOT EXISTS users;
 CREATE SCHEMA IF NOT EXISTS general;
 CREATE SCHEMA IF NOT EXISTS debate;
 CREATE SCHEMA IF NOT EXISTS vote;
+CREATE SCHEMA IF NOT EXISTS avatar;
 
 BEGIN WORK;
 CREATE TABLE IF NOT EXISTS auth.user_master
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS general.image_master
 		image_path varchar(500),
 		image_type integer not null references general.image_type_master(id),
 		generated integer not null default extract(epoch from now()),
+		is_active boolean not null default true,
 		created_by integer not null references auth.user_master(id)
 
 	);
@@ -88,6 +90,19 @@ CREATE TABLE IF NOT EXISTS users.avatar_master
 
 	);
 
+CREATE TABLE IF NOT EXISTS debate.debate_status_type_master
+	(
+		id serial primary key not null,
+		type varchar(100),
+		is_active boolean not null default True
+	);
+
+insert into debate.debate_status_type_master (type) values ('UPCOMINGDEBATE');
+insert into debate.debate_status_type_master (type) values ('PASTDEBATE');
+insert into debate.debate_status_type_master (type) values ('SAVEDDEBATE');
+
+
+
 CREATE TABLE IF NOT EXISTS debate.debate_type_master
 	(
 		id serial primary key not null,
@@ -97,11 +112,11 @@ CREATE TABLE IF NOT EXISTS debate.debate_type_master
 		created_by integer not null references auth.user_master(id)
 	);
 
-
 CREATE TABLE IF NOT EXISTS debate.debate_master
 	(
 		id serial primary key not null,
 		debate_type_id integer not null references debate.debate_type_master(id),
+		debate_status_type_id integer not null references debate.debate_status_type_master(id),
 		title varchar(500),
 		room_id varchar(1000),
 		hour varchar(10),
@@ -203,7 +218,8 @@ CREATE TABLE IF NOT EXISTS vote.vote_type_master
 		id serial primary key not null,
 		type varchar(100),
 		generated integer not null default extract(epoch from now()),
-		created_by integer not null references auth.user_master(id)
+		created_by integer not null references auth.user_master(id),
+		is_active boolean not null default True
 	);
 
 
@@ -255,4 +271,28 @@ CREATE TABLE IF NOT EXISTS debate.debate_tracker_master
 		started_at integer,
 		is_active boolean not null default True
 	);
+
+
+CREATE TABLE IF NOT EXISTS debate.debate_save_master
+
+	(
+		id serial primary key not null,
+		debate_id integer not null references debate.debate_master(id),
+		debate_status_type_id integer not null references debate.debate_status_type_master(id),
+		created_by integer not null references auth.user_master(id),
+		is_active boolean not null default True
+	);
+
+CREATE TABLE IF NOT EXISTS avatar.avatar_master
+	(
+		id serial primary key not null,
+		user_id integer not null references auth.user_master(id),
+		gender varchar(100),
+		skin_tone_id integer not null references general.image_master(id),
+		hair_colour_id integer not null references general.image_master(id),
+		dress_colour_id  integer not null references general.image_master(id),
+		is_active boolean not null default True,
+		generated integer not null default extract(epoch from now())
+	);
+
 COMMIT WORK;

@@ -41,6 +41,7 @@ class DebateMasterInputSchema(BaseModel):
 	hour:str
 	minute:str
 	seconds:str
+	debate_status_type_id:int
 	member_on_each_side:int
 	participants_code:str
 	audience_code:str

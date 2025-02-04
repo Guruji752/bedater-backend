@@ -135,9 +135,6 @@ async def current_debate_remaining_time(sid,data):
 
 
 
-    
-
-
 @sio.event
 async def vote(sid, data):
     user = active_users.get(sid)
@@ -156,20 +153,20 @@ async def vote(sid, data):
 
 
 
-@sio.event
-async def timer_control(sid, data):
-    user = active_users.get(sid)
-    if not user:
-        await sio.emit("error", {"message": "Unauthorized"})
-        return
+# @sio.event
+# async def timer_control(sid, data):
+#     user = active_users.get(sid)
+#     if not user:
+#         await sio.emit("error", {"message": "Unauthorized"})
+#         return
 
-    if not data.get("action") in ["start", "pause"]:
-        await sio.emit("error", {"message": "Invalid action"})
-        return
+#     if not data.get("action") in ["start", "pause"]:
+#         await sio.emit("error", {"message": "Invalid action"})
+#         return
 
-    action = data["action"]
-    print(f"User {user.username} {action}ed the timer in room {data['room_id']}")
-    await sio.emit("timer_status", {"action": action}, room=data["room_id"])
+#     action = data["action"]
+#     print(f"User {user.username} {action}ed the timer in room {data['room_id']}")
+#     await sio.emit("timer_status", {"action": action}, room=data["room_id"])
 
 
 

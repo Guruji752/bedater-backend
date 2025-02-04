@@ -11,6 +11,13 @@ from app.services.FreeStyleServices import FreeStyleServices
 from app.services.IntermediateStyleServices import IntermediateStyleService
 from app.services.AdvanceStyleServices import AdvanceStyleService
 from app.services.ParticipantsTeamsServices import ParticipantsTeamsServices
+from app.models.debate.DebateStatusTypeMaster import DebateStatusTypeMaster
+from app.utils.enums import DebateStatus
+from fastapi.encoders import jsonable_encoder
+from app.models.debate.DebateSaveMaster import DebateSaveMaster
+
+
+
 class DebateServices:
 
 	@staticmethod
@@ -28,6 +35,12 @@ class DebateServices:
 		debate_base_details_dict['participants_code'] = participants_code
 		debate_base_details_dict['audience_code'] = audience_code
 		debate_base_details_dict['created_by'] = user_id
+
+		debate_status_type = DebateStatus.UPCOMINGDEBATE.value
+		debate_status_type = db.query(DebateStatusTypeMaster).filter(DebateStatusTypeMaster.type == debate_status_type,DebateStatusTypeMaster.is_active == True).first()
+		debate_status_type_id = debate_status_type.id
+		debate_base_details_dict["debate_status_type_id"] = debate_status_type_id
+
 		debate_master_input = DebateMasterInputSchema(**debate_base_details_dict)
 		debate_master = DebateMaster(**debate_master_input.dict())
 		try:
@@ -49,4 +62,33 @@ class DebateServices:
 		except Exception as e:
 			raise e
 
+	@staticmethod
+	async def listDebates(debate_status_type_id,user,db):
+
+		user_id = user.id
+		list_debate = db.query(DebateMaster).filter(DebateMaster.debate_status_type_id == debate_status_type_id,DebateMaster.created_by == user_id).all()
+		return jsonable_encoder(list_debate)
+
+
+	@staticmethod
+	async def saveDebates(debate_id,user,db):
+		debate = db.query(DebateMaster).filter(DebateMaster.id == debate_id).first()
+		save_debate = DebateStatus.SAVEDDEBATED.value
+		user_id = user.id
+		debate_status_type = db.query(DebateStatusTypeMaster).filter(DebateStatusTypeMaster.type == save_debate).first()
+		debate_status_type_id = debate_status_type.id
+		data = {"debate_id":debate_id,"debate_status_type_id":debate_status_type_id,"created_by":user_id}
+		is_debate_saved = db.query(DebateSaveMaster).filter(DebateSaveMaster.debate_id == debate_id,DebateSaveMaster.is_active == True).first()
+		if is_debate_saved:
+			return {"msg":"Debate is already saved!",status:200}
+		debate_save_master = DebateSaveMaster(**data)
+		db.add(debate_save_master)
+		db.commit()
+		return {"msg":"Debate has been saved!","status":200} 
+
+
+
+
+
+		
 
