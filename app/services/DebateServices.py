@@ -73,19 +73,16 @@ class DebateServices:
 	@staticmethod
 	async def saveDebates(debate_id,user,db):
 		debate = db.query(DebateMaster).filter(DebateMaster.id == debate_id).first()
-		save_debate = DebateStatus.SAVEDDEBATED.value
-		user_id = user.id
-		debate_status_type = db.query(DebateStatusTypeMaster).filter(DebateStatusTypeMaster.type == save_debate).first()
-		debate_status_type_id = debate_status_type.id
-		data = {"debate_id":debate_id,"debate_status_type_id":debate_status_type_id,"created_by":user_id}
-		is_debate_saved = db.query(DebateSaveMaster).filter(DebateSaveMaster.debate_id == debate_id,DebateSaveMaster.is_active == True).first()
-		if is_debate_saved:
-			return {"msg":"Debate is already saved!",status:200}
-		debate_save_master = DebateSaveMaster(**data)
-		db.add(debate_save_master)
-		db.commit()
-		return {"msg":"Debate has been saved!","status":200} 
-
+		if debate:
+			save_debate = DebateStatus.SAVEDDEBATED.value
+			user_id = user.id
+			debate_status_type = db.query(DebateStatusTypeMaster).filter(DebateStatusTypeMaster.type == save_debate).first()
+			debate_status_type_id = debate_status_type.id
+			debate.debate_status_type_id = debate_status_type_id
+			db.commit()
+			db.refresh(debate)
+			return {"msg":"Debate has been saved!","status":200} 
+		return {"msg":"No debate exist!","status":200}
 
 
 
