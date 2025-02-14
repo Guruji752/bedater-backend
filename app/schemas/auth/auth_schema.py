@@ -13,4 +13,5 @@ class TokenPayload(BaseModel):
 
 
 class UserOut(BaseModel):
-    employee_code_id:int = None
+    isAuthenticated:bool 
+    name:str
