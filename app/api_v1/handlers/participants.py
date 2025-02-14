@@ -17,3 +17,4 @@ async def create_participant(data:ParticipantInputSchema,db:Session=Depends(get_
 			status_code=status.HTTP_400_BAD_REQUEST,
 			detail=f"{e}"
 	)
+

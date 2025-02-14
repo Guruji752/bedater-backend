@@ -67,6 +67,11 @@ class RedisServices:
 
 	@staticmethod
 	async def setDebateTimerAndStatusDetails(virtual_id,db):
+		'''
+			This function set time when debate starts
+			and set status to True for the first time 
+			and change the status on every pause/play button
+		'''
 		redis = await get_redis_connection()
 		exists = await redis.exists(virtual_id)
 		current_epoch = int(time.time())

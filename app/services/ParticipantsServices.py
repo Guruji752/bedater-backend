@@ -57,7 +57,7 @@ class ParticipantsService:
 	@staticmethod
 	async def check_if_user_already_joined(user_id,db):
 		try:
-			if_exist = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.is_active == True).first()
+			if_exist = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.is_locked==True,DebateParticipantMaster.is_active == True).first()
 
 			if if_exist:
 				return {"msg":"User is already part of debate","status":True}

@@ -85,8 +85,9 @@ async def send_message(sid, data):
 @sio.event
 async def set_debate_timer_and_status(sid,data):
     '''
-        This will set the current running status of debate
-        and will set the timer for the first time.
+            This function set time when debate starts
+            and set status to True for the first time 
+            and change the status on every pause/play button
     '''
     try:
         db=SessionLocal()
@@ -113,6 +114,11 @@ async def set_debate_timer_and_status(sid,data):
 
 @sio.event
 async def current_debate_remaining_time(sid,data):
+    '''
+        This function fetchs the current
+        debate time by subtracting the time 
+        from count_down_start key of redis.
+    '''
     try:
         db=SessionLocal()
         user = active_users.get(sid)

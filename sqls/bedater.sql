@@ -273,15 +273,6 @@ CREATE TABLE IF NOT EXISTS debate.debate_tracker_master
 	);
 
 
-CREATE TABLE IF NOT EXISTS debate.debate_save_master
-
-	(
-		id serial primary key not null,
-		debate_id integer not null references debate.debate_master(id),
-		debate_status_type_id integer not null references debate.debate_status_type_master(id),
-		created_by integer not null references auth.user_master(id),
-		is_active boolean not null default True
-	);
 
 CREATE TABLE IF NOT EXISTS avatar.avatar_master
 	(
