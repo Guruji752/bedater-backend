@@ -12,7 +12,7 @@ class DebateMaster(Base):
 
     id = Column(Integer, primary_key=True, server_default=text("nextval('debate.debate_master_id_seq'::regclass)"))
     debate_type_id = Column(ForeignKey('debate.debate_type_master.id'), nullable=False)
-    debate_status_type_id = Column(ForeignKey('debate.debate_status_type_master.id'), nullable=False)
+    # debate_status_type_id = Column(ForeignKey('debate.debate_status_type_master.id'), nullable=False)
     title = Column(String(500))
     room_id = Column(String(1000))
     hour = Column(String(10))
@@ -25,5 +25,5 @@ class DebateMaster(Base):
     created_by = Column(ForeignKey('auth.user_master.id'), nullable=False)
 
     user_master = relationship('UserMaster')
-    debate_status_type = relationship('DebateStatusTypeMaster')
+    # debate_status_type = relationship('DebateStatusTypeMaster')
     debate_type = relationship('DebateTypeMaster')

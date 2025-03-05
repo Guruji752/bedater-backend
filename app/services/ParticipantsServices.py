@@ -19,7 +19,7 @@ class ParticipantsService:
 			joined_team = data_dict['joined_team']
 			debate_id = data_dict['debate_id']
 			data_dict['user_id'] = user_id
-			data_dict['is_locked']=True
+			# data_dict['is_locked']=True
 			debate_participant_inputs = DebateParticipantsMasterInputSchema(**data_dict)
 			participant_data = DebateParticipantMaster(**debate_participant_inputs.dict())
 			db.add(participant_data)

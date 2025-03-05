@@ -30,7 +30,7 @@ class DebateExtraDetailsInput(BaseModel):
 class CreateDebateInputSchema(BaseModel):
 	# topic:List[str] = Field(...,description="list of topics")
 	common_details:CreateDebateBaseInputSchema
-	counter_statments:CounterStatementsInputSchema
+	counter_statments:Optional[CounterStatementsInputSchema]=None
 	extra_details:List[DebateExtraDetailsInput]
 
 
@@ -41,7 +41,7 @@ class DebateMasterInputSchema(BaseModel):
 	hour:str
 	minute:str
 	seconds:str
-	debate_status_type_id:int
+	# debate_status_type_id:int
 	member_on_each_side:int
 	participants_code:str
 	audience_code:str
