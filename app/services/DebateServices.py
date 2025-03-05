@@ -15,6 +15,7 @@ from app.models.debate.DebateStatusTypeMaster import DebateStatusTypeMaster
 from app.utils.enums import DebateStatus
 from fastapi.encoders import jsonable_encoder
 from app.models.debate.DebateSaveMaster import DebateSaveMaster
+from app.models.debate.DebateStatusMaster import DebateStatusMaster
 
 
 
@@ -39,7 +40,7 @@ class DebateServices:
 		debate_status_type = DebateStatus.UPCOMINGDEBATE.value
 		debate_status_type = db.query(DebateStatusTypeMaster).filter(DebateStatusTypeMaster.type == debate_status_type,DebateStatusTypeMaster.is_active == True).first()
 		debate_status_type_id = debate_status_type.id
-		debate_base_details_dict["debate_status_type_id"] = debate_status_type_id
+		# debate_base_details_dict["debate_status_type_id"] = debate_status_type_id
 
 		debate_master_input = DebateMasterInputSchema(**debate_base_details_dict)
 		debate_master = DebateMaster(**debate_master_input.dict())
@@ -47,6 +48,10 @@ class DebateServices:
 			db.add(debate_master)
 			db.flush()
 			debate_id = debate_master.id
+			### Create Debate Status ####
+			debateStatusData = {"debate_id":debate_id,"debate_status_type_id":debate_status_type_id,"created_by":user_id}
+			debateStatusMaster = DebateStatusMaster(**debateStatusData)
+			db.add(debateStatusMaster)
 			data_dict['debate_id'] = debate_id
 			participant_details = await ParticipantsTeamsServices.create_participant_teams_details(debate_id,user_id,db)
 			if not participant_details['status']:
@@ -66,13 +71,15 @@ class DebateServices:
 	async def listDebates(debate_status_type_id,user,db):
 
 		user_id = user.id
-		list_debate = db.query(DebateMaster).filter(DebateMaster.debate_status_type_id == debate_status_type_id,DebateMaster.created_by == user_id).all()
+		debateIds = db.query(DebateStatusMaster.debate_id).filter(DebateStatusMaster.debate_status_type_id == debate_status_type_id,DebateStatusMaster.created_by == user_id).all()
+		debateIds = list(map(lambda x: x[0], debateIds))  # Flatten list of tuples
+		list_debate = db.query(DebateMaster).filter(DebateMaster.id.in_(debateIds)).all()
 		return jsonable_encoder(list_debate)
 
 
 	@staticmethod
 	async def saveDebates(debate_id,user,db):
-		debate = db.query(DebateMaster).filter(DebateMaster.id == debate_id).first()
+		debate = db.query(DebateStatusMaster).filter(DebateStatusMaster.debate_id == debate_id).first()
 		if debate:
 			save_debate = DebateStatus.SAVEDDEBATED.value
 			user_id = user.id

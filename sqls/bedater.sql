@@ -6,6 +6,7 @@ CREATE DATABASE bedater_debates owner bedateruser;
 
 \c bedater_debates
 
+SET SESSION AUTHORIZATION bedateruser;
 
 CREATE SCHEMA IF NOT EXISTS auth;
 CREATE SCHEMA IF NOT EXISTS users;
@@ -116,7 +117,7 @@ CREATE TABLE IF NOT EXISTS debate.debate_master
 	(
 		id serial primary key not null,
 		debate_type_id integer not null references debate.debate_type_master(id),
-		debate_status_type_id integer not null references debate.debate_status_type_master(id),
+		-- debate_status_type_id integer not null references debate.debate_status_type_master(id),
 		title varchar(500),
 		room_id varchar(1000),
 		hour varchar(10),
@@ -284,6 +285,17 @@ CREATE TABLE IF NOT EXISTS avatar.avatar_master
 		dress_colour_id  integer not null references general.image_master(id),
 		is_active boolean not null default True,
 		generated integer not null default extract(epoch from now())
+	);
+
+CREATE TABLE IF NOT EXISTS debate.debate_status_master
+	(
+		id serial primary key not null,
+		debate_id integer not null references debate.debate_master(id),
+		debate_status_type_id integer not null references debate.debate_status_type_master(id),
+		generated integer not null default extract(epoch from now()),
+		last_updated integer,
+		created_by integer not null references auth.user_master(id)
+ 
 	);
 
 COMMIT WORK;
