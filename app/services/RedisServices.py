@@ -105,7 +105,6 @@ class RedisServices:
 				current_epoch = int(time.time())
 				diff = current_epoch - count_down_start
 				return {"msg":"Difference Epoch","status":True,"epoch_diff":diff}
-		\
 		return {"msg":"Debate is not started yet","status":False}
 
 
