@@ -26,9 +26,9 @@ class S3Services:
 		try:
 			user_id = user.id
 			file_obj = form_data['file']
-			doc_type = form_data['doc_type']
+			doc_type = form_data['doc_type'].upper()
 			file_name = form_data['file_name']
-			if doc_type.upper() in [DocumentType.MALEHAIR.value,DocumentType.SKIN.value,DocumentType.DRESS.value,DocumentType.FEMALEHAIR.value]:
+			if doc_type in [DocumentType.MALEHAIR.value,DocumentType.SKIN.value,DocumentType.DRESS.value,DocumentType.FEMALEHAIR.value]:
 				folder = settings.AVATAR_IMAGE_FOLDER_NAME
 			if not file_name:
 				file_extension = file_obj.filename.split(".")[-1]
