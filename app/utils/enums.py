@@ -37,6 +37,7 @@ class DocumentType(Enum):
 	SKIN='SKIN'
 	DRESS='DRESS'
 	PROFILEPICTURE='PROFILEPICTURE'
+	FEMALEHAIR='FEMALEHAIR'
 
 class GenderType(Enum):
 	MALE='MALE'

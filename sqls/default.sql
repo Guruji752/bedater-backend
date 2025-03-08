@@ -1,0 +1,10 @@
+insert into debate.debate_type_master (type,created_by) values ('FREESTYLE',4);
+insert into debate.debate_type_master (type,created_by) values ('ADVANCE',4);
+insert into debate.debate_type_master (type,created_by) values ('INTERMEDIATE',4);
+insert into general.image_type_master (type,created_by) values ('AVATAR',4);
+insert into general.image_type_master (type,created_by) values ('SKIN',4);
+insert into general.image_type_master (type,created_by) values ('DRESS',4);
+insert into general.image_type_master (type,created_by) values ('MALEHAIR',4);
+insert into vote.vote_type_master (type,created_by) values ('SCORE',4);
+insert into vote.vote_type_master (type,created_by) values ('VOTE',4);
+insert into general.image_type_master (type,created_by) values ('FEMALEHAIR',4);
