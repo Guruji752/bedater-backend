@@ -16,7 +16,7 @@ from app.utils.enums import DebateStatus
 from fastapi.encoders import jsonable_encoder
 from app.models.debate.DebateSaveMaster import DebateSaveMaster
 from app.models.debate.DebateStatusMaster import DebateStatusMaster
-
+from app.services.SubscriptionService import SubscriptionService
 
 
 class DebateServices:
@@ -25,6 +25,10 @@ class DebateServices:
 	async def create_debate_service(data:CreateDebateInputSchema,db,user):
 		user_id = user.id
 		data_dict = data.dict()
+		if_allowed = await SubscriptionService.check_if_debate_allowed(user_id,db)
+		allowed = if_allowed["allowed"]
+		if not allowed:
+			return {"msg":if_allowed["msg"],"status":200,"allowed":allowed}
 		common = data_dict['common_details']
 		debate_type_id = common['debate_type_id']
 		debate_type = db.query(DebateTypeMaster).filter(DebateTypeMaster.id == debate_type_id,DebateTypeMaster.is_active == True).first()

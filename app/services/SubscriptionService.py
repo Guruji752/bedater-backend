@@ -1,5 +1,5 @@
 from app.models.subscription.payment_details import PaymentDetail
-from app.models.subscription.subscription_type import SubscriptionType
+from app.models.subscription.SubscriptionType import SubscriptionType
 from app.models.subscription.UserSubscriptionDetails import UserSubscriptionDetail
 from app.schemas.subscription.input_schema import CreateSubscription,PurchaseSubscriptionSchema,PaymentDetailsSchema
 from fastapi import HTTPException, status
@@ -48,6 +48,15 @@ class SubscriptionService:
 				detail=f"{e}"
 			)
 
-
-
-
+	async def check_if_debate_allowed(user_id,db):
+		userSubscription = db.query(UserSubscriptionDetail).filter(UserSubscriptionDetail.user_id == user_id,UserSubscriptionDetail.is_active == True).first()
+		used_debated = userSubscription.used_debated
+		allowed_debate = userSubscription.subscription_type.allowed_debate
+		if used_debated <= allowed_debate:
+			userSubscription.used_debated+=1
+			db.commit()
+			db.refresh(userSubscription)
+			return {"allowed":True,"msg":f"You have used {userSubscription.used_debated}"}
+		userSubscription.is_active = False
+		db.commit()
+		return {"allowed":False,"msg":f"You have used all your debate"}
