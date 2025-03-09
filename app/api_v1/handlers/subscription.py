@@ -3,7 +3,7 @@ from app.api_v1.deps.db_deps import get_transaction_session
 from sqlalchemy.orm import Session
 from app.api_v1.deps.user_deps import get_current_user
 from app.models.subscription.payment_details import PaymentDetail
-from app.models.subscription.subscription_type import SubscriptionType
+from app.models.subscription.SubscriptionType import SubscriptionType
 from app.models.subscription.UserSubscriptionDetails import UserSubscriptionDetail
 from fastapi.encoders import jsonable_encoder
 from fastapi import HTTPException, status
@@ -33,3 +33,15 @@ async def purchase_subscription(data:PaymentDetailsSchema,db:Session=Depends(get
 			status_code=status.HTTP_400_BAD_REQUEST,
 			detail=f"{e}"
 	)
+
+@subscription_router.get("/check",summary="This api will check if subscription exist")
+async def check_if_exist(db:Session=Depends(get_transaction_session),user:UserMaster=Depends(get_current_user)):
+	try:
+		user_id = user.id
+		return await SubscriptionService.check_if_debate_allowed(user_id,db)
+	except Exception as e:
+		raise HTTPException(
+			status_code=status.HTTP_400_BAD_REQUEST,
+			detail=f"{e}"
+	)
+

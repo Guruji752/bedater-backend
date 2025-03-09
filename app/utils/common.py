@@ -2,7 +2,6 @@ import uuid
 import random
 import string
 
-
 def generate_room_id():
 	random_uuid = uuid.uuid4()
 	return str(random_uuid)
@@ -28,4 +27,18 @@ def generate_random_name():
 	series = random.choice(list(groups.keys()))
 	group_name = random.choice(groups[series])
 	return group_name
+
+
+def check_if_debate_allowed(user_id):
+	userSubscription = db.query(UserSubscriptionDetail).filter(UserSubscriptionDetail.user_id == user_id,UserSubscriptionDetail.is_active == True).first()
+	used_debated = userSubscription.used_debated
+	allowed_debate = userSubscription.subscription_type.allowed_debate
+	if used_debated <= allowed_debate:
+		userSubscription.used_debated+=1
+		db.commit()
+		db.refresh(userSubscription)
+		return True
+	return False 
+
+
 

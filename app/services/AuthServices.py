@@ -13,7 +13,7 @@ class AuthServices:
 		)
 		check_if_email = re.match(email_regex, username)
 		if check_if_email:
-			user = await AuthServices.get_user_by_id(username,db)
+			user = await AuthServices.get_user_by_email_id(username,db)
 			if user:
 				user_id = user.id
 		else:
