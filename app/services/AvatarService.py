@@ -25,7 +25,7 @@ class AvatarService:
 	@staticmethod
 	async def getAvatar(user,db):
 		user_id = user.id
-		avatar_master = db.query(AvatarMaster).filter(AvatarMaster.user_id == user_id).all()
+		avatar_master = db.query(AvatarMaster).filter(AvatarMaster.user_id == user_id,AvatarMaster.is_active == True).all()
 		avatar = {"skin":"","hair":"","dress":""}
 		for i in avatar_master:
 			if i.skin_tone.image_type_master.type ==  DocumentType.SKIN.value:
@@ -52,11 +52,11 @@ class AvatarService:
 		for image in images:
 			image_path = image.image_path
 			if image.image_type_master.type == DocumentType.SKIN.value:
-				output['skin'].append(image_path)
+				output['skin'].append({"image_path":image_path,"id":image.id})
 			if image.image_type_master.type == hair_type:
-				output['hair'].append(image_path)
+				output['hair'].append({"image_path":image_path,"id":image.id})
 			if image.image_type_master.type == DocumentType.DRESS.value:
-				output['dress'].append(image_path)
+				output['dress'].append({"image_path":image_path,"id":image.id})
 		return output
 
 
