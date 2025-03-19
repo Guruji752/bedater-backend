@@ -8,13 +8,13 @@ class FreeStyleServices:
 	async def create_freestyle(data_dict,user_id,db):
 		try:
 			debate_id = data_dict['debate_id']
-			counter_statments = data_dict['counter_statments']
-			counter_statments['debate_id'] = data_dict['debate_id']
-			counter_statments['created_by'] = user_id
+			# counter_statments = data_dict['counter_statments']
+			# counter_statments['debate_id'] = data_dict['debate_id']
+			# counter_statments['created_by'] = user_id
 			extra_details = data_dict['extra_details']
-			counterDataSchema = CounterMasterStatementsInputSchema(**counter_statments)
-			counterData = CounterStatementsMaster(**counterDataSchema.dict())
-			db.add(counterData)
+			# counterDataSchema = CounterMasterStatementsInputSchema(**counter_statments)
+			# counterData = CounterStatementsMaster(**counterDataSchema.dict())
+			# db.add(counterData)
 			topic_data = [{"topic":i['topic'],"debate_id":debate_id,"created_by":user_id} for i in extra_details]
 			topics_master = [TopicMaster(**data) for data in topic_data]
 			db.bulk_save_objects(topics_master)

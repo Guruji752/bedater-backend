@@ -7,6 +7,7 @@ class AvatarInputSchema(BaseModel):
 	skin_tone_id:int
 	hair_colour_id:int
 	dress_colour_id:int
+	is_active:Optional[bool]=True
 
 	@validator("gender",pre=True,always=True)
 	def capitalize_gender(cls,value):
