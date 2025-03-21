@@ -4,7 +4,7 @@ from app.models.subscription.UserSubscriptionDetails import UserSubscriptionDeta
 from app.schemas.subscription.input_schema import CreateSubscription,PurchaseSubscriptionSchema,PaymentDetailsSchema
 from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
-
+from app.models.debate.DebateTypeMaster import DebateTypeMaster
 
 
 class SubscriptionService:
@@ -14,6 +14,15 @@ class SubscriptionService:
 		try:
 			data_dict = data.dict()
 			data_dict['created_by'] = user.id
+
+			### captializing input data ###
+			debate_type_list = [item.upper() for item in data_dict["debate_type"]]
+			#############
+			#### fetching debate type id ####
+			debate_type_id = db.query(DebateTypeMaster.id).filter(DebateTypeMaster.type.in_(debate_type_list)).all()
+			debate_type_id = [id for (id,) in debate_type_id]  # Unpacking tuples
+			######
+			data_dict["debate_type"] = debate_type_id
 			create_subscription_type = SubscriptionType(**data_dict)
 			db.add(create_subscription_type)
 			db.commit()
@@ -48,6 +57,14 @@ class SubscriptionService:
 				detail=f"{e}"
 			)
 
+	async def check_subscription(user_id,db):
+		userSubscription = db.query(UserSubscriptionDetail).filter(UserSubscriptionDetail.user_id == user_id,UserSubscriptionDetail.is_active == True).first()
+		if not userSubscription:
+			return {"allowed":False,"msg":f"No Active Subscription!"}
+		return {"allowed":True,"msg":f"You have used {userSubscription.used_debated}"}
+	
+
+	#### This can be use to update debate count ####
 	async def check_if_debate_allowed(user_id,db):
 		userSubscription = db.query(UserSubscriptionDetail).filter(UserSubscriptionDetail.user_id == user_id,UserSubscriptionDetail.is_active == True).first()
 		if not userSubscription:
@@ -62,3 +79,4 @@ class SubscriptionService:
 		userSubscription.is_active = False
 		db.commit()
 		return {"allowed":False,"msg":f"You have used all your debate"}
+	########

@@ -61,5 +61,27 @@ async def save_debate(debate_id:int,user:UserMaster=Depends(get_current_user),db
 	)
 
 
+@debate_router.get("/type",summary="Debate Type")
+async def debate_type(db:Session=Depends(get_transaction_session)):
+	try:
+		return await DebateServices.debateType(db)
+	except Exception as e:
+		raise HTTPException(
+			status_code=status.HTTP_400_BAD_REQUEST,
+			detail=f"{e}"
+	)
+
+
+@debate_router.get("/allowed",summary="Debates allowed to user on basis of subscription")
+async def allowed_debate_type(user:UserMaster=Depends(get_current_user),db:Session=Depends(get_transaction_session)):
+	try:
+		user_id = user.id
+		return await DebateServices.allowedDebateType(user_id,db)
+	except Exception as e:
+		raise HTTPException(
+			status_code=status.HTTP_400_BAD_REQUEST,
+			detail=f"{e}"
+	)
+
 
 

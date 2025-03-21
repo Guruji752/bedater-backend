@@ -17,7 +17,8 @@ from fastapi.encoders import jsonable_encoder
 from app.models.debate.DebateSaveMaster import DebateSaveMaster
 from app.models.debate.DebateStatusMaster import DebateStatusMaster
 from app.services.SubscriptionService import SubscriptionService
-
+from app.models.subscription.UserSubscriptionDetails import UserSubscriptionDetail
+from app.models.subscription.SubscriptionType import SubscriptionType
 
 class DebateServices:
 
@@ -96,7 +97,27 @@ class DebateServices:
 		return {"msg":"No debate exist!","status":200}
 
 
-
+	@staticmethod
+	async def debateType(db):
+		debate_type = db.query(DebateStatusTypeMaster).filter(DebateStatusTypeMaster.is_active == True).all()
+		return jsonable_encoder(debate_type)
 
 		
+	@staticmethod
+	async def allowedDebateType(user_id,db):
+		subscriptionId = db.query(UserSubscriptionDetail).filter(UserSubscriptionDetail.user_id == user_id,UserSubscriptionDetail.is_active == True).first()
+		if not subscriptionId:
+			return {"status":False,"msg":"No Active Subscription!"}
+		subscriptionTypeId = subscriptionId.subscription_type_id
+		#### Allowed Debate ###
+		subscription_details = db.query(SubscriptionType).filter(SubscriptionType.id == subscriptionTypeId).first()
+		allowedDebates = subscription_details.debate_type
+		#####################
+
+		#### subcription details ###
+		debateType = db.query(DebateTypeMaster).filter(DebateTypeMaster.id.in_(allowedDebates)).all()
+		return {"status":True,"msg":"","data":jsonable_encoder(debateType)}
+		#############################
+
+
 

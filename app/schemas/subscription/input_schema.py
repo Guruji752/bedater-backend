@@ -5,7 +5,7 @@ from typing import Optional , Union , List,Optional
 class CreateSubscription(BaseModel):
 	plan_name:str
 	amount:float
-	debate_type:int
+	debate_type:list
 	allowed_debate:int
 
 class PurchaseSubscriptionSchema(BaseModel):
