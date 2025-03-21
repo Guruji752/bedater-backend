@@ -38,7 +38,7 @@ async def purchase_subscription(data:PaymentDetailsSchema,db:Session=Depends(get
 async def check_if_exist(db:Session=Depends(get_transaction_session),user:UserMaster=Depends(get_current_user)):
 	try:
 		user_id = user.id
-		return await SubscriptionService.check_if_debate_allowed(user_id,db)
+		return await SubscriptionService.check_subscription(user_id,db)
 	except Exception as e:
 		raise HTTPException(
 			status_code=status.HTTP_400_BAD_REQUEST,
