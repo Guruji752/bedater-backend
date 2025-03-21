@@ -67,7 +67,7 @@ class DebateServices:
 			if debate_type.type == DebateType.ADVANCE.value:
 				return await AdvanceStyleService.create_advance(data_dict,user_id,teams_details,db)
 			if debate_type.type == DebateType.INTERMEDIATE.value:
-				return await IntermediateStyleService.create_intermediate(data_dict,user_id,teams_details,db)
+				return await IntermediateStyleService.create_intermediate(data_dict,user_id,db)
 
 		except Exception as e:
 			raise e
