@@ -27,7 +27,7 @@ class AdvanceStyleService:
 				topic_id  = await AdvanceStyleService.get_topic_id_by_name(topic,topics_master)
 				temp['topic_id'] = topic_id
 				temp['debate_id'] = debate_id
-				temp['team_id'] = [team['team_id'] for team in teams_details if  details['action_side'] == team['team_side']][0]
+				temp['team_id'] = [team['team_id'] for team in teams_details if  details['action_side'].upper() == team['team_side']][0]
 				temp['voting_type'] = details['voting_type']
 				temp['voting_allowed'] = details['voting_allowed']
 				temp['hour'] = details['hour']

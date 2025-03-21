@@ -50,6 +50,8 @@ class SubscriptionService:
 
 	async def check_if_debate_allowed(user_id,db):
 		userSubscription = db.query(UserSubscriptionDetail).filter(UserSubscriptionDetail.user_id == user_id,UserSubscriptionDetail.is_active == True).first()
+		if not userSubscription:
+			return {"allowed":False,"msg":f"No Active Subscription!"}
 		used_debated = userSubscription.used_debated
 		allowed_debate = userSubscription.subscription_type.allowed_debate
 		if used_debated <= allowed_debate:
