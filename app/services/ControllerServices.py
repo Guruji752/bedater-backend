@@ -69,7 +69,6 @@ class ControllerServices:
 			if not virtual_id:
 				return {"status":False,"msg":"You'll be allowed once debate will be start","virtual_id":None,"userTypeDetails":None}
 			### checking if virtual id has been set in redis or not #### 
-			# import pdb;pdb.set_trace()
 			virtual_id = virtual_id[0]
 			participantsTypeMaster = db.query(ParticipantsTypeMaster).filter(ParticipantsTypeMaster.participant_type == userType,ParticipantsTypeMaster.is_active == True).first()
 			userTypeDetails = {"participant_type":participantsTypeMaster.participant_type,"participant_type_id":participantsTypeMaster.id}

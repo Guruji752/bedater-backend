@@ -9,7 +9,7 @@ class ParticipantsService:
 
 	@staticmethod
 	async def create_participants_service(data,db,user):
-		try:
+		try:			
 			user_id = user.id
 			is_exist = await ParticipantsService.check_if_user_already_joined(user_id,db)
 			if is_exist['status']:
@@ -70,13 +70,13 @@ class ParticipantsService:
 
 	@staticmethod
 	async def check_participant_type(debate_id,user_id,db):
-	    try:
+		try:
 	    	### Not check through VIRTUAL ID Because while joining by the mediator virtual id won't be created ####
-	        participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.is_active == True,DebateParticipantMaster.debate_id == debate_id,DebateParticipantMaster.user_id == user_id).first()
-	        participantType = participantMaster.participant_type.participant_type
-	        return participantType
-	    except Exception as e:
-	        raise e
+			participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.is_active == True,DebateParticipantMaster.debate_id == debate_id,DebateParticipantMaster.user_id == user_id).first()
+			participantType = participantMaster.participant_type.participant_type
+			return participantType
+		except Exception as e:
+			raise e
 
 
 	@staticmethod

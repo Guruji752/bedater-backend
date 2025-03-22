@@ -14,7 +14,7 @@ from app.models.auth.UserMaster import UserMaster
 from app.services.ControllerServices import ControllerServices
 from app.services.RedisServices import RedisServices
 from app.services.ParticipantsServices import ParticipantsService
-
+from app.services.ParticipantsTeamsServices import ParticipantsTeamsServices
 
 sio = socketio.AsyncServer(cors_allowed_origins="*",async_mode='asgi')
 active_users = {}
@@ -52,7 +52,6 @@ async def connect(sid, environ):
             await sio.disconnect(sid)
             return
         active_users[sid] = {"user": user, "room_id": room_id}
-
         print(f"User {user.username} connected with SID {sid} and joined room {room_id}")
         await sio.enter_room(sid, room_id)
         await sio.emit("connected", {"message": f"Welcome {user.username} to the debate!"}, room=room_id)
@@ -67,6 +66,9 @@ async def connect(sid, environ):
                 output = await ParticipantsService.update_mediator_virtual_id(virtual_id,debate_id,user.id,db)
                 if not output["status"]:
                     raise HTTPException("Something Went Wrong! While setting up mediator virtual id")
+                ####### set team details###
+                await ParticipantsTeamsServices.create_participant_team_details(debate_id,virtual_id,user.id,db)
+                #######################
                 msg,status,data = await RedisServices.set_debate(virtual_id,user.id,debate_id,db)
             if userType == "DEBATER":
                 msg,status = await RedisServices.set_or_update_debate_virtual_id(virtual_id,user.id,debate_id,db)

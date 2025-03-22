@@ -7,6 +7,7 @@ from app.api_v1.handlers.participants import participant_router
 from app.api_v1.handlers.controller import controller_router
 from app.api_v1.handlers.avatar import avatar_router
 from app.api_v1.handlers.subscription import subscription_router
+from app.api_v1.handlers.vote import vote_router
 approuter = APIRouter()
 approuter.include_router(auth_router,prefix='/auth',tags=["Auth"])
 approuter.include_router(user_router,prefix='/user',tags=["User"])
@@ -15,3 +16,4 @@ approuter.include_router(participant_router,prefix='/participant',tags=['Partici
 approuter.include_router(controller_router,prefix="",tags=['Controller'])
 approuter.include_router(avatar_router,prefix="/avatar",tags=['Avatar'])
 approuter.include_router(subscription_router,prefix='/subscription',tags=['Subscription'])
+approuter.include_router(vote_router,prefix='/vote',tags=['Vote'])
