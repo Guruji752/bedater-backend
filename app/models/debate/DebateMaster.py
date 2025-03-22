@@ -23,6 +23,7 @@ class DebateMaster(Base):
     audience_code = Column(String(100))
     generated = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
     created_by = Column(ForeignKey('auth.user_master.id'), nullable=False)
+    is_active = Column(Boolean, nullable=False, server_default=text("true"))
 
     user_master = relationship('UserMaster')
     # debate_status_type = relationship('DebateStatusTypeMaster')

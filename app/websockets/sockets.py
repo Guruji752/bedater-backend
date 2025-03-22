@@ -13,6 +13,7 @@ from app.api_v1.deps.user_deps import get_current_user
 from app.models.auth.UserMaster import UserMaster
 from app.services.ControllerServices import ControllerServices
 from app.services.RedisServices import RedisServices
+from app.services.ParticipantsServices import ParticipantsService
 
 
 sio = socketio.AsyncServer(cors_allowed_origins="*",async_mode='asgi')
@@ -59,8 +60,21 @@ async def connect(sid, environ):
         if startDebate['status']:
             virtual_id,debate_id = startDebate['virtual_id'],startDebate['debate_id']
 
-        msg,status = await RedisServices.set_or_update_debate_virtual_id(virtual_id,user.id,debate_id,db)
-        print(f"{msg},{status}")
+        ######## Setup Redis Payload #####
+            ###### check the user type ###
+            userType = await ParticipantsService.check_participant_type(debate_id,user.id,db)
+            if userType == "MEDIATOR":
+                output = await ParticipantsService.update_mediator_virtual_id(virtual_id,debate_id,user.id,db)
+                if not output["status"]:
+                    raise HTTPException("Something Went Wrong! While setting up mediator virtual id")
+                msg,status,data = await RedisServices.set_debate(virtual_id,user.id,debate_id,db)
+            if userType == "DEBATER":
+                msg,status = await RedisServices.set_or_update_debate_virtual_id(virtual_id,user.id,debate_id,db)
+
+            #############################
+
+        ####################################
+
     finally:
         print("DB Session closed")
         db.close()
