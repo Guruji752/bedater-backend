@@ -20,3 +20,6 @@ async def create_participant(data:ParticipantInputSchema,db:Session=Depends(get_
 			detail=f"{e}"
 	)
 
+
+# @participant_router.get("/teams/{debate_id}",summary="Api To fetch details of team of both side")
+# async def debater_teams()

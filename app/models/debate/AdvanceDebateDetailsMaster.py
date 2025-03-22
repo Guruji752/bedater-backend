@@ -19,10 +19,10 @@ class AdvanceDebateDetailsMaster(Base):
     voting_allowed = Column(Boolean, nullable=False, server_default=text("true"))
     generated = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
     created_by = Column(ForeignKey('auth.user_master.id'), nullable=False)
-    team_id = Column(ForeignKey('debate.debate_participant_teams_details_master.id'), nullable=False)
+    team_id = Column(ForeignKey('debate.debate_participant_teams_master.id', ondelete='CASCADE'))
 
     user_master = relationship('UserMaster')
     debate = relationship('DebateMaster')
-    team = relationship('DebateParticipantTeamsDetailsMaster')
+    team = relationship('DebateParticipantTeamsMaster')
     topic = relationship('TopicMaster')
     vote_type_master = relationship('VoteTypeMaster')

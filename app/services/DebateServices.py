@@ -58,7 +58,7 @@ class DebateServices:
 			debateStatusMaster = DebateStatusMaster(**debateStatusData)
 			db.add(debateStatusMaster)
 			data_dict['debate_id'] = debate_id
-			participant_details = await ParticipantsTeamsServices.create_participant_teams_details(debate_id,user_id,db)
+			participant_details = await ParticipantsTeamsServices.create_participant_team_master(debate_id,user_id,db)
 			if not participant_details['status']:
 				raise f"Something went wrong!"
 			teams_details = participant_details['data']
