@@ -9,6 +9,48 @@ from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
 class RedisServices:
 
 	@staticmethod
+	async def checkDebateStart(virtual_id):
+		try:
+			redis = await get_redis_connection()
+			exists = await redis.exists(virtual_id)
+			status,msg = (False,"Debate Not started Yet") if not exists else (True,"Debate Started By Mediator")
+			return status,msg
+		except Exception as e:
+			raise HTTPException(
+				status_code = status.HTTP_400_BAD_REQUEST,
+				detail=f"{e}"
+			)
+
+	@staticmethod
+	async def set_debate(virtual_id,user_id,debate_id,db):
+		try:
+			redis = await get_redis_connection()
+			exists = await redis.exists(virtual_id)
+			if not exists:
+				######### Fetch auto generate team name ########
+				teams = db.query(DebateParticipantTeamsDetailsMaster.team_name).filter(DebateParticipantTeamsDetailsMaster.debate_id == debate_id,DebateParticipantTeamsDetailsMaster.is_active==True).all() 
+				team_1,team_2 = [i[0] for i in teams]
+				default_data = {f"{virtual_id}":{"count_down_start":0,"is_debate_running":True,"selected_topic":"","completed_topic":[],"total_viewer":0,"winner_team":"","is_mediator_joined":True}}
+				default_data[f"{virtual_id}"][team_1]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{}}
+				default_data[f"{virtual_id}"][team_2]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{}}
+				await redis.set(virtual_id, json.dumps(default_data))
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			return {"status":True,"msg":"Debate has been set!!!","data":debate_data}
+		except Exception as e:
+			raise HTTPException(
+				status_code = status.HTTP_400_BAD_REQUEST,
+				detail=f"{e}"
+			)
+
+
+
+
+
+
+
+
+	@staticmethod
 	async def set_or_update_debate_virtual_id(virtual_id,user_id,debate_id,db):
 		'''
 			This function will be used

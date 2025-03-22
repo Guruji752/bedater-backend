@@ -4,7 +4,7 @@ from app.models.debate.DebateParticipantMaster import DebateParticipantMaster
 from fastapi.encoders import jsonable_encoder
 from fastapi import HTTPException, status
 from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
-
+from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
 class ParticipantsService:
 
 	@staticmethod
@@ -19,13 +19,14 @@ class ParticipantsService:
 			joined_team = data_dict['joined_team']
 			debate_id = data_dict['debate_id']
 			data_dict['user_id'] = user_id
-			# data_dict['is_locked']=True
+			data_dict['is_locked']=True
 			debate_participant_inputs = DebateParticipantsMasterInputSchema(**data_dict)
 			participant_data = DebateParticipantMaster(**debate_participant_inputs.dict())
 			db.add(participant_data)
 			db.flush()
 			participant_id = participant_data.id
 			participant_type = db.query(ParticipantsTypeMaster).filter(ParticipantsTypeMaster.id == data_dict['participant_type_id']).first()
+			#### Check if user joined as participant ###
 			if participant_data.participant_type.participant_type == 'DEBATER':
 				participant_details = {"participant_id":participant_id,"joined_team":joined_team,"debate_id":debate_id}
 				return await ParticipantsService.create_participant_details(participant_details,db)
@@ -58,7 +59,6 @@ class ParticipantsService:
 	async def check_if_user_already_joined(user_id,db):
 		try:
 			if_exist = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.is_locked==True,DebateParticipantMaster.is_active == True).first()
-
 			if if_exist:
 				return {"msg":"User is already part of debate","status":True}
 			return {"status":False}
@@ -68,5 +68,25 @@ class ParticipantsService:
 				detail=f"{e}"
 			)
 
+	@staticmethod
+	async def check_participant_type(debate_id,user_id,db):
+	    try:
+	    	### Not check through VIRTUAL ID Because while joining by the mediator virtual id won't be created ####
+	        participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.is_active == True,DebateParticipantMaster.debate_id == debate_id,DebateParticipantMaster.user_id == user_id).first()
+	        participantType = participantMaster.participant_type.participant_type
+	        return participantType
+	    except Exception as e:
+	        raise e
 
 
+	@staticmethod
+	async def update_mediator_virtual_id(virtual_id,debate_id,user_id,db):
+		try:
+			mediator = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.is_active == True,DebateParticipantMaster.debate_id == debate_id,DebateParticipantMaster.user_id == user_id).first()
+			tracker_id = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.virtual_id == virtual_id).first()
+			mediator.virtual_id = tracker_id.id
+			db.commit()
+			db.refresh(mediator)
+			return {"status":True}
+		except Exception as e:
+			raise e

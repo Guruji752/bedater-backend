@@ -47,6 +47,8 @@ DebateParticipantMaster
 #### Websocker Flow ####
 
 1) Websocket will be connect once users will be locked
-2) 
-
-
+2) All other Websocket Will be Connect Once Mediator Will start the debate
+3) First Mediator Will start Debate and Payload will be set on redis
+4) User is Mediator or Participant Will be fetch from DebateParticipantMaster while joining the socket
+5) virtual id entry of mediator in DebateParticipantMaster will through websocket
+6) 

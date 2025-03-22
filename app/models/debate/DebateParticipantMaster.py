@@ -14,8 +14,10 @@ class DebateParticipantMaster(Base):
     participant_type_id = Column(ForeignKey('debate.participants_type_master.id'), nullable=False)
     is_locked = Column(Boolean, nullable=False, server_default=text("false"))
     generated = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
-    is_active = Column(Integer, nullable=False, server_default=text("EXTRACT(epoch FROM now())"))
+    is_active = Column(Boolean, nullable=False, server_default=text("true"))
+    virtual_id = Column(ForeignKey('debate.debate_tracker_master.id', ondelete='CASCADE'))
 
     debate = relationship('DebateMaster')
     participant_type = relationship('ParticipantsTypeMaster')
     user = relationship('UserMaster')
+    virtual = relationship('DebateTrackerMaster')

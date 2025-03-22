@@ -5,6 +5,7 @@ from typing import Optional , Union , List
 
 class ParticipantInputSchema(BaseModel):
 	debate_id:int
+	virtual_id:Optional[str]=None
 	participant_type_id:int
 	joined_team:Optional[int]=None
 
