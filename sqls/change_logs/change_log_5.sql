@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS debates.debate_participant_teams_master
+CREATE TABLE IF NOT EXISTS debate.debate_participant_teams_master
 	(
 		id serial primary key not null,
 		debate_id integer not null references debate.debate_master(id),
