@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import status,HTTPException
 from app.models.debate.DebateParticipantTeamsMaster import DebateParticipantTeamsMaster
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
-
+from app.utils.common import get_virtual_id_fk
 class ParticipantsTeamsServices:
 
 	@staticmethod
@@ -86,8 +86,9 @@ class ParticipantsTeamsServices:
 	@staticmethod
 	async def create_participant_team_details(debate_id,virtual_id,user_id,db):
 		try:
+			virtual_fk_id = get_virtual_id_fk(virtual_id,db)
 			### check if team exist already for the debate ##
-			debateTeams = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.virtual_id == virtual_id,DebateParticipantTeamsDetailsMaster.is_active == True).all()
+			debateTeams = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.virtual_id == virtual_fk_id,DebateParticipantTeamsDetailsMaster.is_active == True).all()
 			if debateTeams:
 				return {"msg":"Teams Already Exists"}
 			#######################################
