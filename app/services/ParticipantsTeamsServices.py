@@ -86,6 +86,11 @@ class ParticipantsTeamsServices:
 	@staticmethod
 	async def create_participant_team_details(debate_id,virtual_id,user_id,db):
 		try:
+			### check if team exist already for the debate ##
+			debateTeams = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.virtual_id == virtual_id,DebateParticipantTeamsDetailsMaster.is_active == True).all()
+			if debateTeams:
+				return {"msg":"Teams Already Exists"}
+			#######################################
 			teams = db.query(DebateParticipantTeamsMaster).filter(DebateParticipantTeamsMaster.debate_id == debate_id,DebateParticipantTeamsMaster.is_active == True).all()
 			
 			debateTrackerDetails = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.virtual_id == virtual_id,DebateTrackerMaster.is_active == True).first()
@@ -106,6 +111,7 @@ class ParticipantsTeamsServices:
 			teams_detail_master = [DebateParticipantTeamsDetailsMaster(**data) for data in teams_details_list]
 			db.add_all(teams_detail_master)
 			db.commit()
+			return {"msg":"Teams Created"}
 		except Exception as e:
 			raise HTTPException(
 				status_code=status.HTTP_400_BAD_REQUEST,

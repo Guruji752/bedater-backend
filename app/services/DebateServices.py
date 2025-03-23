@@ -78,7 +78,7 @@ class DebateServices:
 		user_id = user.id
 		debateIds = db.query(DebateStatusMaster.debate_id).filter(DebateStatusMaster.debate_status_type_id == debate_status_type_id,DebateStatusMaster.created_by == user_id).all()
 		debateIds = list(map(lambda x: x[0], debateIds))  # Flatten list of tuples
-		list_debate = db.query(DebateMaster).filter(DebateMaster.id.in_(debateIds)).order_by(DebateMaster.generated.desc()).all()
+		list_debate = db.query(DebateMaster).filter(DebateMaster.id.in_(debateIds),DebateMaster.is_active == True).order_by(DebateMaster.generated.desc()).all()
 		return jsonable_encoder(list_debate)
 
 

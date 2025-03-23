@@ -6,6 +6,8 @@ import time
 from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
 from app.models.debate.DebateParticipantMaster import DebateParticipantMaster
 from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
+from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
+from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
 class RedisServices:
 
 	@staticmethod
@@ -85,7 +87,14 @@ class RedisServices:
 			if participantType == ParticipantsType.DEBATER.value:
 				participantId = participantMaster.id
 				debateDetails = db.query(DebateParticipantDetail).filter(DebateParticipantDetail.participant_id == participantId,DebateParticipantDetail.is_active==True).first()
-				joined_team = debateDetails.debate_participant_teams_details_master.team_name
+				### check virtual id , id from tracker master ###
+				virtualId = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.virtual_id == virtual_id,DebateTrackerMaster.is_active	== True).first()
+				virtualId = virtualId.id
+				joined_team = debateDetails.joined_team
+				####
+				######## fetch team detail ###
+				teamDetails = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.virtual_id == virtualId,DebateParticipantTeamsDetailsMaster.team_id == joined_team,DebateParticipantTeamsDetailsMaster.is_active == True).first()
+				joined_team = teamDetails.team_name
 
 				if user_id not in debate_data[f"{virtual_id}"][joined_team]["user_ids"]:
 					debate_data[f"{virtual_id}"][joined_team]["user_ids"].append(user_id)
