@@ -5,6 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import HTTPException, status
 from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
+from app.utils.common import get_room_id_of_debate
 class ParticipantsService:
 
 	@staticmethod
@@ -13,7 +14,7 @@ class ParticipantsService:
 			user_id = user.id
 			is_exist = await ParticipantsService.check_if_user_already_joined(user_id,db)
 			if is_exist['status']:
-				return {"msg":is_exist["msg"],"status":200}
+				return {"msg":is_exist["msg"],"status":True}
 
 			data_dict = data.dict()
 			joined_team = data_dict['joined_team']
@@ -32,7 +33,7 @@ class ParticipantsService:
 				return await ParticipantsService.create_participant_details(participant_details,db)
 			db.commit()
 			db.refresh(participant_data)
-			return {"msg":"User has joined successfully as Mediator!","status":200}
+			return {"msg":"User has joined successfully as Mediator!","status":True}
 		except Exception as e:
 			raise HTTPException(
 				status_code = status.HTTP_400_BAD_REQUEST,
@@ -90,3 +91,17 @@ class ParticipantsService:
 			return {"status":True}
 		except Exception as e:
 			raise e
+
+	@staticmethod
+	async def isParticipantLocked(user_id,db):
+		try:
+			participantDetails = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.is_active == True).first()
+			is_locked = participantDetails.is_locked
+			room_id,debate_id=None,None
+			if is_locked:
+				debate_id = participantDetails.debate_id
+				room_id = get_room_id_of_debate(debate_id,db)
+			return {"is_locked":is_locked,"debate_id":debate_id,"room_id":room_id}
+		except Exception as e:
+			raise e
+

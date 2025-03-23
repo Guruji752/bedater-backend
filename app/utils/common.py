@@ -1,7 +1,8 @@
 import uuid
 import random
 import string
-
+from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
+from app.models.debate.DebateMaster import DebateMaster
 def generate_room_id():
 	random_uuid = uuid.uuid4()
 	return str(random_uuid)
@@ -41,4 +42,13 @@ def check_if_debate_allowed(user_id):
 	return False 
 
 
+def get_virtual_id_fk(virtual_id,db):
+	virtualId = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.virtual_id == virtual_id,DebateTrackerMaster.is_active == True).first()
+	_id = virtualId.id
+	return _id
+
+def get_room_id_of_debate(debate_id,db):
+	debate = db.query(DebateMaster).filter(DebateMaster.id == debate_id,DebateMaster.is_active == True).first()
+	room_id = debate.room_id
+	return room_id
 
