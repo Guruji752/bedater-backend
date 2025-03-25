@@ -16,8 +16,12 @@ class Settings(BaseSettings):
     ALGORITHM:str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60*5*5
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7   # 7 days
-    BACKEND_CORS_ORIGINS:List = [
-        "http://localhost:3000","http://uat.bedater.com"
+    BACKEND_CORS_ORIGINS:List = ["http://localhost:3000",
+    "http://localhost:3000/",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3000/",
+    "http://uat.bedater.com",
+    "http://uat.bedater.com/"
     ]
     PROJECT_NAME: str = "BEDATER BACKEND"
     DB_USER: str = os.getenv("DB_USER")
