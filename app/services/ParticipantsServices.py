@@ -116,3 +116,10 @@ class ParticipantsService:
 		except Exception as e:
 			raise e
 
+	@staticmethod
+	async def participantType(db):
+		try:
+			participantType = db.query(ParticipantsTypeMaster).filter(ParticipantsTypeMaster.is_active == True).all()
+			return jsonable_encoder(participantType)
+		except Exception as e:
+			raise e
