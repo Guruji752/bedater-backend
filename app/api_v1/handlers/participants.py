@@ -30,5 +30,14 @@ async def is_participant_locked(db:Session=Depends(get_transaction_session),user
 			detail=f"{e}"
 	)
 
+@participant_router.get("/type",summary="Particpant Type")
+async def participant_type(db:Session=Depends(get_transaction_session)):
+	try:
+		return await ParticipantsService.participantType(db)
+	except Exception as e:
+		raise HTTPException(
+			status_code=status.HTTP_400_BAD_REQUEST,
+			detail=f"{e}"
+	)
 # @participant_router.get("/teams/{debate_id}",summary="Api To fetch details of team of both side")
 # async def debater_teams()
