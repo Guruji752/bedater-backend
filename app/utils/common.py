@@ -52,3 +52,12 @@ def get_room_id_of_debate(debate_id,db):
 	room_id = debate.room_id
 	return room_id
 
+
+def string_to_bool(string_bool):
+  if string_bool.lower() == 'true':
+    return True
+  elif string_bool.lower() == 'false':
+    return False
+  else:
+    raise ValueError(f"Invalid boolean string: {string_bool}")
+

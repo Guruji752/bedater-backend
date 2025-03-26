@@ -8,6 +8,7 @@ from app.models.debate.DebateParticipantMaster import DebateParticipantMaster
 from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
 from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
+from app.models.avatar.AvatarMaster import AvatarMaster
 class RedisServices:
 
 	@staticmethod
@@ -160,6 +161,74 @@ class RedisServices:
 
 
 			#######################
+
+	'''
+	Update Audience Count When audience join
+	'''
+	@staticmethod
+	async def update_audience_count(virtual_id,join=True):
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		if exists:
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			total_viewer = debate_data[f"{virtual_id}"]["total_viewer"]
+			if join:
+				total_viewer = total_viewer+1
+			if total_viewer>0 and (not join):
+				total_viewer = total_viewer-1
+			debate_data[f"{virtual_id}"]["total_viewer"] = total_viewer
+			await redis.set(virtual_id, json.dumps(debate_data))
+			await redis.close()
+			msg = "Viewer Updated"
+			return {"msg":msg,"total_viewer":total_viewer,"status":True}
+		return {"msg":"Debate is not started yet","status":False}
+
+
+
+	'''
+		server participants avatar
+	'''
+	@staticmethod
+	async def get_participant_type(user_id,virtual_id,db):
+		from app.utils.common import get_virtual_id_fk
+		userAvatars=[]
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		virtaul_id_fk = get_virtual_id_fk(virtual_id,db)
+		participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.virtual_id == virtaul_id_fk,DebateParticipantMaster.is_active == True).first()
+		participantDetails = db.query(DebateParticipantDetail).filter(DebateParticipantDetail.participant_id  == participantMaster.id).first()
+		joinedTeam = participantDetails.joined_team
+		teamDetails = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.team_id == joinedTeam,DebateParticipantTeamsDetailsMaster.is_active == True).first()
+		team_name = teamDetails.team_name
+		if exists:
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			team = debate_data[f"{virtual_id}"][team_name]
+			user_ids = team["user_ids"]
+
+			avatars = db.query(AvatarMaster).filter(AvatarMaster.user_id.in_(user_ids)).all()
+			for user in avatars:
+				temp = {}
+				temp["skin"] = user.skin_tone.image_path
+				temp["hair"] = user.hair_colour.image_path
+				temp["dress"] = user.dress_colour.image_path
+				userAvatars.append(temp)
+			return {"data":userAvatars,"status":True,"msg":""}
+		return {"data":"","status":False,"msg":"No debate Exist!"}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

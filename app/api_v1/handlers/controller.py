@@ -10,6 +10,7 @@ from app.services.UploadServices import S3Services
 from app.api_v1.deps.form_deps import parse_form_data
 from app.models.debate.DebateMaster import DebateMaster
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
+from app.api_v1.deps.db import get_transaction_session as db
 
 controller_router = APIRouter()
 
@@ -37,7 +38,7 @@ async def upload_images(form_data:dict = Depends(parse_form_data),db:Session=Dep
 		)
 
 @controller_router.post("/check/debate/start",summary="This Api will check if mediator has started the debate and it will be integrated one debaters/audience will enter the code")
-async def check_debate_start(data:CheckDebateStart,db:Session=Depends(get_transaction_session)):
+async def check_debate_start(data:CheckDebateStart,db:Session=Depends(db)):
 	try:
 
 		return await ControllerServices.checkDebateStart(data,db)

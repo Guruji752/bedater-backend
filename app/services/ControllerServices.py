@@ -73,7 +73,7 @@ class ControllerServices:
 			participantsTypeMaster = db.query(ParticipantsTypeMaster).filter(ParticipantsTypeMaster.participant_type == userType,ParticipantsTypeMaster.is_active == True).first()
 			userTypeDetails = {"participant_type":participantsTypeMaster.participant_type,"participant_type_id":participantsTypeMaster.id}
 			status,msg = await RedisServices.checkDebateStart(virtual_id)
-			return {"status":status,"msg":msg,"virtual_id":virtual_id,"userTypeDetails":userTypeDetails}
+			return {"status":status,"msg":msg,"virtual_id":virtual_id,"room_id":room_id,"userTypeDetails":userTypeDetails}
 		except Exception as e:
 			raise HTTPException(
 				status_code=status.HTTP_400_BAD_REQUEST,
