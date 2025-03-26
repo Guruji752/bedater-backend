@@ -15,9 +15,11 @@ from app.services.ControllerServices import ControllerServices
 from app.services.RedisServices import RedisServices
 from app.services.ParticipantsServices import ParticipantsService
 from app.services.ParticipantsTeamsServices import ParticipantsTeamsServices
-
+from app.utils.common import string_to_bool
+import uuid
 sio = socketio.AsyncServer(cors_allowed_origins="*",async_mode='asgi')
 active_users = {}
+
 
 async def authenticate_user(token: str, db: Session):
     try:
@@ -39,6 +41,27 @@ async def connect(sid, environ):
         
         token = query_params.get("token")
         room_id = query_params.get("room_id")
+        virtual_id = query_params.get("virtual_id")
+        is_audience = query_params.get("is_audience") ### Boolena Type
+        is_audience = string_to_bool(is_audience)
+        debateRoom = f"{room_id}"
+
+        ######## audience #######
+        if is_audience:
+            if not (room_id):
+                await sio.disconnect(sid)
+                return None
+            user=uuid.uuid4()
+            active_users[sid] = {"user": user, "debateRoom": debateRoom,"is_audience":is_audience}
+            print(active_users,"active_users")
+            await sio.enter_room(sid, debateRoom)
+            await sio.emit("connected", {"message": f"Welcome Guest to the debate!"}, room=debateRoom)
+            print(f"Guest {user} joined in audience!! in room {debateRoom}")
+            ##### Updating Audience Viwer Count ####
+            await RedisServices.update_audience_count(virtual_id=virtual_id,join=True)  
+            #############
+            return {"msg":"Audience Member joined"}
+
         if not token:
             await sio.disconnect(sid)
             return {"msg":"No token exist"}
@@ -51,14 +74,15 @@ async def connect(sid, environ):
         if not room_id:
             await sio.disconnect(sid)
             return
-        active_users[sid] = {"user": user, "room_id": room_id}
-        print(f"User {user.username} connected with SID {sid} and joined room {room_id}")
-        await sio.enter_room(sid, room_id)
-        await sio.emit("connected", {"message": f"Welcome {user.username} to the debate!"}, room=room_id)
+        # active_users[sid] = {"user": user, "room_id": room_id}
+        active_users[sid] = {"user": user, "debateRoom": debateRoom,"is_audience":is_audience}
+        print(f"User {user.username} connected with SID {sid} and joined room {debateRoom}")
+        await sio.enter_room(sid, debateRoom)
+        #### Setting up time when debate first starts #####
         startDebate = await ControllerServices.create_debate_start(room_id,db)
         if startDebate['status']:
             virtual_id,debate_id = startDebate['virtual_id'],startDebate['debate_id']
-
+        ########
         ######## Setup Redis Payload #####
             ###### check the user type ###
             userType = await ParticipantsService.check_participant_type(debate_id,user.id,db)
@@ -68,10 +92,15 @@ async def connect(sid, environ):
                     raise HTTPException("Something Went Wrong! While setting up mediator virtual id")
                 ####### set team details###
                 await ParticipantsTeamsServices.create_participant_team_details(debate_id,virtual_id,user.id,db)
+                await sio.emit("message_received", {"message": f"Welcome {user.username} to the debate! joined as mediator"}, room=debateRoom)
+
                 #######################
                 msg,status,data = await RedisServices.set_debate(virtual_id,user.id,debate_id,db)
             if userType == "DEBATER":
                 msg,status = await RedisServices.set_or_update_debate_virtual_id(virtual_id,user.id,debate_id,db)
+                output = await RedisServices.get_participant_type(user.id,virtual_id,db)
+                print(output,"==")
+                await sio.emit("message_received", {"message": output}, room=debateRoom)
 
             #############################
 
@@ -84,18 +113,19 @@ async def connect(sid, environ):
 @sio.event
 async def send_message(sid, data):
     user = active_users.get(sid)
+    print(data,"data send data")
     if not user:
         await sio.emit("error", {"message": "Unauthorized"})
-        return
+        return {"msg":"User Not Exisr"}
 
     user_details = user.get('user')
-    room_id = user.get("room_id")
-    if not room_id:
+    debateRoom = user.get("debateRoom")
+    if not debateRoom:
         await sio.emit("error", {"message": "Room ID not found"})
-        return
+        return {"msg":"Can't find user id"}
 
-    print(f"User {user_details.username} sent message: {data['message']} in room {room_id}")
-    await sio.emit("message_received", {"message": data["message"]}, room=room_id)
+    print(f"User {user_details} sent message: {data['message']} in room {debateRoom}")
+    await sio.emit("message_received", {"message": data["message"]}, room=debateRoom)
 
 
 @sio.event
@@ -218,8 +248,11 @@ async def update_topic(sid, data):
 async def disconnect(sid):
     user = active_users.pop(sid, None)
     user_details = user.get('user')
-    if user:
-        print(f"User {user_details.username} disconnected from room.")
+    is_audience = user.get('is_audience')
+    virtual_id = user.get("virtual_id")
+    if user and is_audience:
+        await RedisServices.update_audience_count(virtual_id=virtual_id,join=False)
+        print(f"User {user_details} disconnected from room.")
 
 
 @sio.event
