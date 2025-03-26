@@ -15,4 +15,4 @@ class DebateParticipantsMasterInputSchema(BaseModel):
 	participant_type_id:int
 	user_id:int
 	is_locked:bool
-	virtual_id:int
+	virtual_id:Optional[int]=None
