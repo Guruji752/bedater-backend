@@ -18,12 +18,14 @@ class ParticipantsService:
 
 			data_dict = data.dict()
 			virtual_id = data_dict["virtual_id"]
-			virtual_id_fk = get_virtual_id_fk(virtual_id,db)
+
+			if virtual_id:
+				virtual_id_fk = get_virtual_id_fk(virtual_id,db)
+				data_dict['virtual_id']=virtual_id_fk
 			joined_team = data_dict['joined_team']
 			debate_id = data_dict['debate_id']
 			data_dict['user_id'] = user_id
 			data_dict['is_locked']=True
-			data_dict['virtual_id']=virtual_id_fk
 			debate_participant_inputs = DebateParticipantsMasterInputSchema(**data_dict)
 			participant_data = DebateParticipantMaster(**debate_participant_inputs.dict())
 			db.add(participant_data)
