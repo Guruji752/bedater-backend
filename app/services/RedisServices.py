@@ -9,6 +9,7 @@ from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
 from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
 from app.models.avatar.AvatarMaster import AvatarMaster
+from app.utils.common import get_virtual_id_fk
 class RedisServices:
 
 	@staticmethod
@@ -190,24 +191,24 @@ class RedisServices:
 		server participants avatar
 	'''
 	@staticmethod
-	async def get_participant_type(user_id,virtual_id,db):
+	async def get_participant_avatar(team_name,virtual_id,db):
 		from app.utils.common import get_virtual_id_fk
 		userAvatars=[]
 		redis = await get_redis_connection()
 		exists = await redis.exists(virtual_id)
-		virtaul_id_fk = get_virtual_id_fk(virtual_id,db)
-		participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.virtual_id == virtaul_id_fk,DebateParticipantMaster.is_active == True).first()
-		participantDetails = db.query(DebateParticipantDetail).filter(DebateParticipantDetail.participant_id  == participantMaster.id).first()
-		joinedTeam = participantDetails.joined_team
-		teamDetails = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.team_id == joinedTeam,DebateParticipantTeamsDetailsMaster.is_active == True).first()
-		team_name = teamDetails.team_name
+		# virtaul_id_fk = get_virtual_id_fk(virtual_id,db)
+		# participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.virtual_id == virtaul_id_fk,DebateParticipantMaster.is_active == True).first()
+		# participantDetails = db.query(DebateParticipantDetail).filter(DebateParticipantDetail.participant_id  == participantMaster.id).first()
+		# joinedTeam = participantDetails.joined_team
+		# teamDetails = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.team_id == joinedTeam,DebateParticipantTeamsDetailsMaster.is_active == True).first()
+		# team_name = teamDetails.team_name
 		if exists:
 			data = await redis.get(virtual_id)
 			debate_data = json.loads(data)
 			team = debate_data[f"{virtual_id}"][team_name]
 			user_ids = team["user_ids"]
 
-			avatars = db.query(AvatarMaster).filter(AvatarMaster.user_id.in_(user_ids)).all()
+			avatars = db.query(AvatarMaster).filter(AvatarMaster.user_id.in_(user_ids),AvatarMaster.is_active==True).all()
 			for user in avatars:
 				temp = {}
 				temp["skin"] = user.skin_tone.image_path
@@ -216,6 +217,43 @@ class RedisServices:
 				userAvatars.append(temp)
 			return {"data":userAvatars,"status":True,"msg":""}
 		return {"data":"","status":False,"msg":"No debate Exist!"}
+
+	@staticmethod
+	async def removeParticipantFromDebate(user_id,virtual_id,db):
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		if exists:
+			virtaul_id_fk = get_virtual_id_fk(virtual_id,db)
+			participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.virtual_id == virtaul_id_fk,DebateParticipantMaster.is_active == True).first()
+			participantDetails = db.query(DebateParticipantDetail).filter(DebateParticipantDetail.participant_id  == participantMaster.id).first()
+			joinedTeam = participantDetails.joined_team
+			teamDetails = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.team_id == joinedTeam,DebateParticipantTeamsDetailsMaster.is_active == True).first()
+			team_name = teamDetails.team_name
+			# import pdb;pdb.set_trace()
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			team = debate_data[f"{virtual_id}"][team_name]
+			user_ids = team["user_ids"]
+			user_ids.remove(user_id)
+			if not user_ids:
+				user_ids=[]
+
+			debate_data[f"{virtual_id}"][team_name]["user_ids"]=updated_userid
+			await redis.set(virtual_id, json.dumps(debate_data))
+			await redis.close()
+			#### Delete Participant ##
+			db.delete(participantDetails)
+			db.delete(participantMaster)
+			db.commit()
+			#######
+			return {"msg":"User Has been Updated","status":True}
+		return {"msg":"No Debate Exists","status":False}
+
+
+
+
+
+
 
 
 

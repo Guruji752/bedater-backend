@@ -74,7 +74,6 @@ async def connect(sid, environ):
         if not room_id:
             await sio.disconnect(sid)
             return
-        # active_users[sid] = {"user": user, "room_id": room_id}
         active_users[sid] = {"user": user, "debateRoom": debateRoom,"is_audience":is_audience}
         print(f"User {user.username} connected with SID {sid} and joined room {debateRoom}")
         await sio.enter_room(sid, debateRoom)
@@ -82,6 +81,8 @@ async def connect(sid, environ):
         startDebate = await ControllerServices.create_debate_start(room_id,db)
         if startDebate['status']:
             virtual_id,debate_id = startDebate['virtual_id'],startDebate['debate_id']
+            active_users[sid]["debate_id"] = debate_id
+            active_users[sid]["virtual_id"] = virtual_id
         ########
         ######## Setup Redis Payload #####
             ###### check the user type ###
@@ -97,9 +98,13 @@ async def connect(sid, environ):
                 #######################
                 msg,status,data = await RedisServices.set_debate(virtual_id,user.id,debate_id,db)
             if userType == "DEBATER":
+                team_id,team_name = await ParticipantsService.get_joined_team_details(user.id,virtual_id,db)
+
                 msg,status = await RedisServices.set_or_update_debate_virtual_id(virtual_id,user.id,debate_id,db)
-                output = await RedisServices.get_participant_type(user.id,virtual_id,db)
-                print(output,"==")
+                output = await RedisServices.get_participant_avatar(team_name,virtual_id,db)
+                #### fetch and store joined team id and name ###
+                active_users[sid]["team_name"]=team_name
+                active_users[sid]["team_id"]=team_id
                 await sio.emit("message_received", {"message": output}, room=debateRoom)
 
             #############################
@@ -246,13 +251,27 @@ async def update_topic(sid, data):
 
 @sio.event
 async def disconnect(sid):
+    db=SessionLocal()
     user = active_users.pop(sid, None)
     user_details = user.get('user')
     is_audience = user.get('is_audience')
     virtual_id = user.get("virtual_id")
+    debateRoom = user.get("debateRoom")
     if user and is_audience:
         await RedisServices.update_audience_count(virtual_id=virtual_id,join=False)
         print(f"User {user_details} disconnected from room.")
+    if user and (not is_audience):
+        debate_id = user.get("debate_id")
+        userType = await ParticipantsService.check_participant_type(debate_id,user_details.id,db)
+        if userType == "DEBATER":
+            team_name = user.get("team_name")
+            team_id = user.get("team_id")
+            await RedisServices.removeParticipantFromDebate(user_details.id,virtual_id,db)
+            output = await RedisServices.get_participant_avatar(team_name,virtual_id,db)
+            await sio.emit("message_received", {"message": output}, room=debateRoom)
+
+
+
 
 
 @sio.event
