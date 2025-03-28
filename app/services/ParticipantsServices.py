@@ -6,11 +6,14 @@ from fastapi import HTTPException, status
 from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
 from app.utils.common import get_room_id_of_debate,get_virtual_id_fk
+from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
+from app.utils.common import get_virtual_id_fk
 class ParticipantsService:
 
 	@staticmethod
 	async def create_participants_service(data,db,user):
-		try:			
+		try:
+			# import pdb;pdb.set_trace()			
 			user_id = user.id
 			is_exist = await ParticipantsService.check_if_user_already_joined(user_id,db)
 			if is_exist['status']:
@@ -77,6 +80,7 @@ class ParticipantsService:
 	@staticmethod
 	async def check_participant_type(debate_id,user_id,db):
 		try:
+			# import pdb;pdb.set_trace()
 	    	### Not check through VIRTUAL ID Because while joining by the mediator virtual id won't be created ####
 			participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.is_active == True,DebateParticipantMaster.debate_id == debate_id,DebateParticipantMaster.user_id == user_id).first()
 			participantType = participantMaster.participant_type.participant_type
@@ -123,3 +127,16 @@ class ParticipantsService:
 			return jsonable_encoder(participantType)
 		except Exception as e:
 			raise e
+
+	@staticmethod
+	async def get_joined_team_details(user_id,virtual_id,db):
+		virtaul_id_fk = get_virtual_id_fk(virtual_id,db)
+
+		participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.user_id == user_id,DebateParticipantMaster.virtual_id == virtaul_id_fk,DebateParticipantMaster.is_active == True).first()
+		participantDetails = db.query(DebateParticipantDetail).filter(DebateParticipantDetail.participant_id  == participantMaster.id).first()
+		joinedTeam = participantDetails.joined_team
+		teamDetails = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.team_id == joinedTeam,DebateParticipantTeamsDetailsMaster.is_active == True).first()
+		team_name = teamDetails.team_name
+		team_id = teamDetails.team_id
+		return team_id,team_name
+

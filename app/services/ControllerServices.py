@@ -33,6 +33,7 @@ class ControllerServices:
 	@staticmethod
 	async def create_debate_start(room_id,db):
 		try:
+			# import pdb;pdb.set_trace()
 			debate = db.query(DebateMaster).filter(DebateMaster.room_id == room_id).first()
 			debate_id = debate.id
 			if_exist = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.debate_id == debate_id,DebateTrackerMaster.is_active==True).first()
