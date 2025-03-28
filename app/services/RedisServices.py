@@ -238,7 +238,7 @@ class RedisServices:
 			if not user_ids:
 				user_ids=[]
 
-			debate_data[f"{virtual_id}"][team_name]["user_ids"]=updated_userid
+			debate_data[f"{virtual_id}"][team_name]["user_ids"]=user_ids
 			await redis.set(virtual_id, json.dumps(debate_data))
 			await redis.close()
 			#### Delete Participant ##
