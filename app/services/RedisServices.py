@@ -249,6 +249,18 @@ class RedisServices:
 			return {"msg":"User Has been Updated","status":True}
 		return {"msg":"No Debate Exists","status":False}
 
+	@staticmethod
+	async def checkCurrentAndCompletedTopic(virtual_id,db):
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		if exists:
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			completedTopic = debate_data[f"{virtual_id}"]["completed_topic"]
+			selectedTopic = debate_data[f"{virtual_id}"]["selected_topic"]
+			return {"selected_topic":[selectedTopic],"compeleted_topic":completedTopic}
+		raise f"No Debate Exists!"
+
 
 
 
