@@ -5,12 +5,15 @@ from app.models.debate.AdvanceDebateTopicTimeMaster import AdvanceDebateTopicTim
 from app.services.RedisServices import RedisServices
 from app.utils.enums import DebateType
 from app.utils.common import get_virtual_id_fk
+from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
 
 from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
 class MediatorServices:
 
     @staticmethod
-    async def screenDetails(debate_id, virtual_id, db):
+    async def screenDetails(debate_id, db):
+        debateTracker = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.debate_id == debate_id,DebateTrackerMaster.is_active == True).first()
+        virtual_id = debateTracker.virtual_id
         selected_topic, completed_topic = await RedisServices.checkCurrentAndCompletedTopic(virtual_id, db)
         
         debate = db.query(DebateMaster).filter(
