@@ -5,6 +5,7 @@ from app.models.debate.AdvanceDebateTopicTimeMaster import AdvanceDebateTopicTim
 from app.services.RedisServices import RedisServices
 from app.utils.enums import DebateType
 from app.utils.common import get_virtual_id_fk
+import time
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
 
 from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
@@ -62,3 +63,23 @@ class MediatorServices:
         team1,team2 = db.query(DebateParticipantTeamsDetailsMaster.team_name).filter(DebateParticipantTeamsDetailsMaster.debate_id == debate_id ,DebateParticipantTeamsDetailsMaster.virtual_id == vk_fk).all()
         
         return {"team1":team1[0],"team2":team2[0],"topic":Topic,"debate_title":debateTitle}
+    @staticmethod
+    async def mediatorDebateTimer(debate_id,db):
+        from app.services.RedisServices import RedisServices
+        from app.utils.common import get_virtual_id,convert_epoch_difference
+        virtual_id = get_virtual_id(debate_id,db)
+        # import pdb;pdb.set_trace()
+        debateTime= await RedisServices.debateStartTime(virtual_id)
+        if not debateTime["status"]:
+            return {"status":False}
+        # if not debateTime["startedTime"]:
+        debate = db.query(DebateMaster).filter(DebateMaster.id == debate_id,DebateMaster.is_active == True).first()
+        hour,minute,second = debate.hour,debate.minute,debate.seconds
+        debateTime["startedTime"] = 1743703853
+        if debateTime["startedTime"]:
+            # import pdb;pdb.set_trace()
+            current_epoch = int(time.time())
+            hour,minute,second = convert_epoch_difference(debateTime["startedTime"],current_epoch)
+            
+        return hour,minute,second
+

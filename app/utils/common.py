@@ -52,7 +52,9 @@ def get_room_id_of_debate(debate_id,db):
 	room_id = debate.room_id
 	return room_id
 
-
+def get_virtual_id(debate_id,db):
+	debate = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.debate_id == debate_id,DebateTrackerMaster.is_active == True).first()
+	return debate.virtual_id
 def string_to_bool(string_bool):
   if string_bool.lower() == 'true':
     return True
@@ -61,3 +63,9 @@ def string_to_bool(string_bool):
   else:
     raise ValueError(f"Invalid boolean string: {string_bool}")
 
+def convert_epoch_difference(epoch1, epoch2):
+    diff = abs(epoch1 - epoch2)  # Get the absolute difference
+    hours = diff // 3600
+    minutes = (diff % 3600) // 60
+    seconds = diff % 60
+    return f"{hours:02}",f"{minutes:02}",f"{seconds:02}"

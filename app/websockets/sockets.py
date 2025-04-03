@@ -17,6 +17,7 @@ from app.services.ParticipantsServices import ParticipantsService
 from app.services.ParticipantsTeamsServices import ParticipantsTeamsServices
 from app.utils.common import string_to_bool
 import uuid
+from app.services.MediatorServices import MediatorServices
 sio = socketio.AsyncServer(cors_allowed_origins="*",async_mode='asgi')
 active_users = {}
 
@@ -93,7 +94,8 @@ async def connect(sid, environ):
                     raise HTTPException("Something Went Wrong! While setting up mediator virtual id")
                 ####### set team details###
                 await ParticipantsTeamsServices.create_participant_team_details(debate_id,virtual_id,user.id,db)
-                await sio.emit("message_received", {"message": f"Welcome {user.username} to the debate! joined as mediator"}, room=debateRoom)
+                hour,minute,second = await MediatorServices.mediatorDebateTimer(debate_id,db)
+                await sio.emit("message_received", {"message": f"Welcome {user.username} to the debate! joined as mediator","timer":{"hour":hour,"minute":minute,"second":second}}, room=debateRoom)
 
                 #######################
                 msg,status,data = await RedisServices.set_debate(virtual_id,user.id,debate_id,db)
