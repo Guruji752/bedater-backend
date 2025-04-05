@@ -267,6 +267,17 @@ class RedisServices:
 
 
 
+	@staticmethod
+	async def debateStartTime(virtual_id):
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		if exists:
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			startedTime =  debate_data[f"{virtual_id}"]["count_down_start"]
+			return {"status":True,"startedTime":startedTime}
+		return {"status":False,"startedTime":startedTime}
+
 
 
 

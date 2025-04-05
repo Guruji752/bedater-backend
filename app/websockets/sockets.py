@@ -17,6 +17,7 @@ from app.services.ParticipantsServices import ParticipantsService
 from app.services.ParticipantsTeamsServices import ParticipantsTeamsServices
 from app.utils.common import string_to_bool
 import uuid
+from app.services.MediatorServices import MediatorServices
 sio = socketio.AsyncServer(cors_allowed_origins="*",async_mode='asgi')
 active_users = {}
 
@@ -144,13 +145,13 @@ async def get_debate_time(sid,data):
             return
         user_details = user.get('user')
         is_audience = user.get('is_audience')
-        # virtual_id = user.get("virtual_id")
+        virtual_id = user.get("virtual_id")
         debateRoom = user.get("debateRoom")
         debate_id = user.get("debate_id")
         if user and (not is_audience):
             userType = await ParticipantsService.check_participant_type(debate_id,user_details.id,db)
             if userType == "MEDIATOR":
-                hour,minute,second = await MediatorServices.mediatorDebateTimer(debate_id,db)
+                hour,minute,second = await MediatorServices.mediatorDebateTimer(debate_id,virtual_id,db)
             await sio.emit("mediator_debate_time", {"timer":{"hour":hour,"minute":minute,"second":second},"status":True}, room=debateRoom)
         await sio.emit("mediator_debate_time",{"timer":{},"status":False})
     except Exception as e:
