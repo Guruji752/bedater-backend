@@ -6,7 +6,9 @@ from app.services.RedisServices import RedisServices
 from app.utils.enums import DebateType
 from app.utils.common import get_virtual_id_fk
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
-
+from app.services.RedisServices import RedisServices
+import time
+# from app.utils.common import convert_epoch_difference
 from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
 class MediatorServices:
 
@@ -64,10 +66,9 @@ class MediatorServices:
         return {"team1":team1[0],"team2":team2[0],"topic":Topic,"debate_title":debateTitle}
 
     @staticmethod
-    async def mediatorDebateTimer(debate_id,db):
-        from app.services.RedisServices import RedisServices
-        from app.utils.common import get_virtual_id,convert_epoch_difference
-        virtual_id = get_virtual_id(debate_id,db)
+    async def mediatorDebateTimer(debate_id,virtual_id,db):
+        
+        # virtual_id = get_virtual_id(debate_id,db)
         # import pdb;pdb.set_trace()
         debateTime= await RedisServices.debateStartTime(virtual_id)
         if not debateTime["status"]:
@@ -77,7 +78,7 @@ class MediatorServices:
         total_hour = int(debate.hour)
         total_minute = int(debate.minute)
         total_second = int(debate.seconds)
-        debateTime["startedTime"] = 1743777698
+        debateTime["startedTime"] = 1743860470
         if not debateTime["startedTime"]:
             # If startedTime is None, return the original duration
             return total_hour, total_minute, total_second

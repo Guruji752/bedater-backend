@@ -80,6 +80,7 @@ class ParticipantsService:
 	@staticmethod
 	async def check_participant_type(debate_id,user_id,db):
 		try:
+			# import pdb;pdb.set_trace()
 	    	### Not check through VIRTUAL ID Because while joining by the mediator virtual id won't be created ####
 			participantMaster = db.query(DebateParticipantMaster).filter(DebateParticipantMaster.is_active == True,DebateParticipantMaster.debate_id == debate_id,DebateParticipantMaster.user_id == user_id).first()
 			participantType = participantMaster.participant_type.participant_type
