@@ -275,7 +275,8 @@ class RedisServices:
 			data = await redis.get(virtual_id)
 			debate_data = json.loads(data)
 			startedTime =  debate_data[f"{virtual_id}"]["count_down_start"]
-			return {"status":True,"startedTime":startedTime}
+			lastPauseTime = debate_data[f"{virtual_id}"]["last_paused"]
+			return {"status":True,"startedTime":startedTime,"lastPauseTime":lastPauseTime}
 		return {"status":False,"startedTime":startedTime}
 
 

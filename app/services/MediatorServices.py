@@ -66,7 +66,7 @@ class MediatorServices:
         return {"team1":team1[0],"team2":team2[0],"topic":Topic,"debate_title":debateTitle}
 
     @staticmethod
-    async def mediatorDebateTimer(debate_id,virtual_id,db):
+    async def mediatorDebateTimer(debate_id,virtual_id,is_pause,db):
         
         # virtual_id = get_virtual_id(debate_id,db)
         # import pdb;pdb.set_trace()
@@ -78,7 +78,7 @@ class MediatorServices:
         total_hour = int(debate.hour)
         total_minute = int(debate.minute)
         total_second = int(debate.seconds)
-        debateTime["startedTime"] = 1743860470
+        # debateTime["startedTime"] = 1743860470
         if not debateTime["startedTime"]:
             # If startedTime is None, return the original duration
             return total_hour, total_minute, total_second
@@ -88,7 +88,16 @@ class MediatorServices:
           # Set your start time
 
         if debateTime["startedTime"]:
-            current_epoch = int(time.time())
+            # import pdb;pdb.set_trace()
+            if is_pause:
+                current_epoch = debateTime["lastPauseTime"]
+            if not is_pause:
+                current_epoch = int(time.time())
+
+            # if debateTime["startedTime"]!=debateTime["lastPauseTime"]:
+            #     current_epoch = debateTime["lastPauseTime"]
+            # if debateTime["startedTime"] == debateTime["lastPauseTime"]:
+            #     current_epoch = int(time.time())
             elapsed_seconds = current_epoch - debateTime["startedTime"]
             
             # Calculate remaining time
