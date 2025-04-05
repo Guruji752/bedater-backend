@@ -136,8 +136,12 @@ class RedisServices:
 			if not count_down_start_value:
 				debate_data[f"{virtual_id}"]["count_down_start"]=current_epoch
 				debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
+			
+			# if not(is_pause):
+			# 	debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
 			if is_pause:
 				debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
+
 
 			current_status = debate_data[f"{virtual_id}"]["is_debate_running"]
 			update_status = True if is_pause else False
@@ -278,6 +282,21 @@ class RedisServices:
 			lastPauseTime = debate_data[f"{virtual_id}"]["last_paused"]
 			return {"status":True,"startedTime":startedTime,"lastPauseTime":lastPauseTime}
 		return {"status":False,"startedTime":startedTime}
+
+
+	@staticmethod
+	async def resetDebateTime(virtual_id):
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		if exists:
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			debate_data[f"{virtual_id}"]["count_down_start"]=0
+			debate_data[f"{virtual_id}"]["last_paused"]=0
+			await redis.set(virtual_id, json.dumps(debate_data))
+			await redis.close()
+			return {"status":True}
+		return {"status":False}
 
 
 

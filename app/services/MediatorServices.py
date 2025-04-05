@@ -66,7 +66,7 @@ class MediatorServices:
         return {"team1":team1[0],"team2":team2[0],"topic":Topic,"debate_title":debateTitle}
 
     @staticmethod
-    async def mediatorDebateTimer(debate_id,virtual_id,is_pause,db):
+    async def mediatorDebateTimer(debate_id,virtual_id,is_pause,is_refresh,db):
         
         # virtual_id = get_virtual_id(debate_id,db)
         # import pdb;pdb.set_trace()
@@ -79,9 +79,35 @@ class MediatorServices:
         total_minute = int(debate.minute)
         total_second = int(debate.seconds)
         # debateTime["startedTime"] = 1743860470
-        if not debateTime["startedTime"]:
-            # If startedTime is None, return the original duration
+
+        print("===")
+        # import pdb;pdb.set_trace()
+        ### CASE 1 First Time load and debate is_pause by default  #####
+        if is_refresh and is_pause and (not debateTime["startedTime"]):
+            print("first time load")
             return total_hour, total_minute, total_second
+        #########
+
+        ##### CASE 2 Debate is Running and User refresh ###
+        if is_refresh and (not is_pause):
+            print("case 2")
+            current_epoch = int(time.time())
+
+        ###########
+
+        #### CASE 3 Debate is Pause and user refresh ####
+        if is_refresh and is_pause:
+            print("case 3")
+            current_epoch = debateTime["lastPauseTime"]
+
+        ######
+
+
+        # if not debateTime["startedTime"]:
+        #     # If startedTime is None, return the original duration
+        #     return total_hour, total_minute, total_second
+        # if debateTime["startedTime"] == debateTime["lastPauseTime"]:
+        #     return total_hour, total_minute, total_second
 
         # Calculate total duration in seconds
         total_duration_seconds = total_hour * 3600 + total_minute * 60 + total_second
@@ -93,6 +119,7 @@ class MediatorServices:
                 current_epoch = debateTime["lastPauseTime"]
             if not is_pause:
                 current_epoch = int(time.time())
+            
 
             # if debateTime["startedTime"]!=debateTime["lastPauseTime"]:
             #     current_epoch = debateTime["lastPauseTime"]
