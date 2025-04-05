@@ -34,7 +34,7 @@ class RedisServices:
 				######### Fetch auto generate team name ########
 				teams = db.query(DebateParticipantTeamsDetailsMaster.team_name).filter(DebateParticipantTeamsDetailsMaster.debate_id == debate_id,DebateParticipantTeamsDetailsMaster.is_active==True).all() 
 				team_1,team_2 = [i[0] for i in teams]
-				default_data = {f"{virtual_id}":{"count_down_start":0,"is_debate_running":True,"selected_topic":"","completed_topic":[],"total_viewer":0,"winner_team":"","is_mediator_joined":True}}
+				default_data = {f"{virtual_id}":{"count_down_start":0,"last_paused":0,"is_debate_running":True,"selected_topic":"","completed_topic":[],"total_viewer":0,"winner_team":"","is_mediator_joined":True}}
 				default_data[f"{virtual_id}"][team_1]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{}}
 				default_data[f"{virtual_id}"][team_2]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{}}
 				await redis.set(virtual_id, json.dumps(default_data))
@@ -119,7 +119,7 @@ class RedisServices:
 		#######################
 
 	@staticmethod
-	async def setDebateTimerAndStatusDetails(virtual_id,db):
+	async def setDebateTimerAndStatusDetails(virtual_id,is_pause,db):
 		'''
 			This function set time when debate starts
 			and set status to True for the first time 
@@ -135,13 +135,17 @@ class RedisServices:
 			count_down_start_value = debate_data[f"{virtual_id}"]["count_down_start"]
 			if not count_down_start_value:
 				debate_data[f"{virtual_id}"]["count_down_start"]=current_epoch
+				debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
+			if is_pause:
+				debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
+
 			current_status = debate_data[f"{virtual_id}"]["is_debate_running"]
-			update_status = True if not current_status else False ### This will reverse the current status of debate
+			update_status = True if is_pause else False
 			debate_data[f"{virtual_id}"]["is_debate_running"] = update_status
 			await redis.set(virtual_id, json.dumps(debate_data))
 			await redis.close()
-			msg = "Current Debate status is Active" if update_status else "Current Debate status is In-Active"
-			return {"msg":msg,"current_status":update_status,"status":True}
+			msg = "Current Debate status is Active" if is_pause else "Current Debate status is In-Active"
+			return {"msg":msg,"status":True,"is_pause":is_pause}
 		return {"msg":"Debate is not started yet","status":False}
 
 	@staticmethod
