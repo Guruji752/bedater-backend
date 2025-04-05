@@ -155,6 +155,7 @@ async def get_debate_time(sid,data):
             if userType == "MEDIATOR":
                 hour,minute,second = await MediatorServices.mediatorDebateTimer(debate_id,virtual_id,is_pause,is_refresh,db)
             await sio.emit("mediator_debate_time", {"timer":{"hour":hour,"minute":minute,"second":second},"status":True}, room=debateRoom)
+            return None
         await sio.emit("mediator_debate_time",{"timer":{},"status":False})
     except Exception as e:
         raise e
