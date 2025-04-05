@@ -140,6 +140,7 @@ async def get_debate_time(sid,data):
     try:
         db=SessionLocal()
         user = active_users.get(sid)
+        is_pause = data.get("is_pause")
         if not user:
             await sio.emit("error", {"message": "Unauthorized"})
             return
@@ -151,7 +152,7 @@ async def get_debate_time(sid,data):
         if user and (not is_audience):
             userType = await ParticipantsService.check_participant_type(debate_id,user_details.id,db)
             if userType == "MEDIATOR":
-                hour,minute,second = await MediatorServices.mediatorDebateTimer(debate_id,virtual_id,db)
+                hour,minute,second = await MediatorServices.mediatorDebateTimer(debate_id,virtual_id,is_pause,db)
             await sio.emit("mediator_debate_time", {"timer":{"hour":hour,"minute":minute,"second":second},"status":True}, room=debateRoom)
         await sio.emit("mediator_debate_time",{"timer":{},"status":False})
     except Exception as e:
