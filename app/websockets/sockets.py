@@ -93,6 +93,7 @@ async def connect(sid, environ):
                     raise HTTPException("Something Went Wrong! While setting up mediator virtual id")
                 ####### set team details###
                 await ParticipantsTeamsServices.create_participant_team_details(debate_id,virtual_id,user.id,db)
+
                 await sio.emit("message_received", {"message": f"Welcome {user.username} to the debate! joined as mediator"}, room=debateRoom)
 
                 #######################
@@ -132,6 +133,32 @@ async def send_message(sid, data):
     print(f"User {user_details} sent message: {data['message']} in room {debateRoom}")
     await sio.emit("message_received", {"message": data["message"]}, room=debateRoom)
 
+@sio.event
+async def get_debate_time(sid,data):
+    # import pdb;pdb.set_trace()
+    try:
+        db=SessionLocal()
+        user = active_users.get(sid)
+        if not user:
+            await sio.emit("error", {"message": "Unauthorized"})
+            return
+        user_details = user.get('user')
+        is_audience = user.get('is_audience')
+        # virtual_id = user.get("virtual_id")
+        debateRoom = user.get("debateRoom")
+        debate_id = user.get("debate_id")
+        if user and (not is_audience):
+            userType = await ParticipantsService.check_participant_type(debate_id,user_details.id,db)
+            if userType == "MEDIATOR":
+                hour,minute,second = await MediatorServices.mediatorDebateTimer(debate_id,db)
+            await sio.emit("mediator_debate_time", {"timer":{"hour":hour,"minute":minute,"second":second},"status":True}, room=debateRoom)
+        await sio.emit("mediator_debate_time",{"timer":{},"status":False})
+    except Exception as e:
+        raise e
+    finally:
+        print("DB connection closed")
+        db.close()
+
 
 @sio.event
 async def set_debate_timer_and_status(sid,data):
@@ -142,21 +169,28 @@ async def set_debate_timer_and_status(sid,data):
     '''
     try:
         db=SessionLocal()
+        is_pause=data.get("is_pause")
         user = active_users.get(sid)
+        user_details = user.get('user')
+        is_audience = user.get('is_audience')
+        virtual_id = user.get("virtual_id")
+        debateRoom = user.get("debateRoom")
+        debate_id = user.get("debate_id")
         if not user:
             await sio.emit("error", {"message": "Unauthorized"})
             return
         user_details = user.get('user')
-        room_id = user.get("room_id")
-        if not room_id:
-            await sio.emit("error", {"message": "Room ID not found"})
-            return
+        virtual_id = user.get('virtual_id')
+        # room_id = user.get("room_id")
+        # if not room_id:
+        #     await sio.emit("error", {"message": "Room ID not found"})
+        #     return
        
 
-        debateTimerAndStatus = await RedisServices.setDebateTimerAndStatusDetails(virtual_id,db)
+        debateTimerAndStatus = await RedisServices.setDebateTimerAndStatusDetails(virtual_id,is_pause,db)
         if debateTimerAndStatus["status"]:
-            current_status = debateTimerAndStatus["current_status"]
-            await sio.emit("debate_start_time", {"current_status": current_status}, room=room_id)
+            current_status = debateTimerAndStatus["is_pause"]
+            await sio.emit("debate_start_time", {"current_status": current_status}, room=debateRoom)
 
 
     finally:

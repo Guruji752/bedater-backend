@@ -62,3 +62,53 @@ class MediatorServices:
         team1,team2 = db.query(DebateParticipantTeamsDetailsMaster.team_name).filter(DebateParticipantTeamsDetailsMaster.debate_id == debate_id ,DebateParticipantTeamsDetailsMaster.virtual_id == vk_fk).all()
         
         return {"team1":team1[0],"team2":team2[0],"topic":Topic,"debate_title":debateTitle}
+
+    @staticmethod
+    async def mediatorDebateTimer(debate_id,db):
+        from app.services.RedisServices import RedisServices
+        from app.utils.common import get_virtual_id,convert_epoch_difference
+        virtual_id = get_virtual_id(debate_id,db)
+        # import pdb;pdb.set_trace()
+        debateTime= await RedisServices.debateStartTime(virtual_id)
+        if not debateTime["status"]:
+            return {"status":False}
+        debate = db.query(DebateMaster).filter(DebateMaster.id == debate_id, DebateMaster.is_active == True).first()
+        # Get the original total duration from debate object
+        total_hour = int(debate.hour)
+        total_minute = int(debate.minute)
+        total_second = int(debate.seconds)
+        debateTime["startedTime"] = 1743777698
+        if not debateTime["startedTime"]:
+            # If startedTime is None, return the original duration
+            return total_hour, total_minute, total_second
+
+        # Calculate total duration in seconds
+        total_duration_seconds = total_hour * 3600 + total_minute * 60 + total_second
+          # Set your start time
+
+        if debateTime["startedTime"]:
+            current_epoch = int(time.time())
+            elapsed_seconds = current_epoch - debateTime["startedTime"]
+            
+            # Calculate remaining time
+            remaining_seconds = max(0, total_duration_seconds - elapsed_seconds)
+            
+            # Convert remaining seconds back to hours, minutes, seconds
+            hour = remaining_seconds // 3600
+            remaining_seconds %= 3600
+            minute = remaining_seconds // 60
+            second = remaining_seconds % 60
+            
+            # If remaining time becomes zero or negative, set all values to zero
+            if hour <= 0 and minute <= 0 and second <= 0:
+                hour = 0
+                minute = 0
+                second = 0
+            
+            # Debug output
+            print(f"Total duration: {total_hour}h {total_minute}m {total_second}s")
+            print(f"Elapsed seconds: {elapsed_seconds}")
+            print(f"Remaining seconds: {remaining_seconds}")
+            print(f"Remaining time: {hour}h {minute}m {second}s")
+
+        return hour, minute, second
