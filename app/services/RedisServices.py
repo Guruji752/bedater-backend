@@ -314,6 +314,20 @@ class RedisServices:
 		return {"status":False}
 
 
+	@staticmethod
+	async def getDebateCurrentStatus(debate_id,db):
+		debate_tracker = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.debate_id == debate_id,DebateTrackerMaster.is_active == True).first()
+		virtual_id = debate_tracker.virtual_id
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		if exists:
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			status = debate_data[f"{virtual_id}"]["is_debate_running"]
+			return {"current_status":status,"msg":"Debate Started!"}
+		return {"current_status":None,"msg":"Debate is not started yet"}
+
+
 
 
 

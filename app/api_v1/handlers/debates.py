@@ -5,7 +5,7 @@ from app.schemas.debate.debate_input_schema import CreateDebateInputSchema
 from app.api_v1.deps.user_deps import get_current_user
 from app.models.auth.UserMaster import UserMaster
 from app.services.DebateServices import DebateServices
-
+from app.services.RedisServices import RedisServices
 debate_router = APIRouter()
 
 @debate_router.post("/create",summary="Create Debate")
@@ -83,5 +83,14 @@ async def allowed_debate_type(user:UserMaster=Depends(get_current_user),db:Sessi
 			detail=f"{e}"
 	)
 
+@debate_router.get("/current_status/{debate_id}",summary="Api to give current status")
+async def get_current_status(debate_id:int,db:Session=Depends(get_transaction_session)):
+	try:
+		return await RedisServices.getDebateCurrentStatus(debate_id,db)
+	except Exception as e:
+		raise HTTPException(
+			status_code=status.HTTP_400_BAD_REQUEST,
+			detail=f"{e}"
+	)
 
 
