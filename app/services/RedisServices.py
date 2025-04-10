@@ -135,13 +135,13 @@ class RedisServices:
 			count_down_start_value = debate_data[f"{virtual_id}"]["count_down_start"]
 			if not count_down_start_value:
 				debate_data[f"{virtual_id}"]["count_down_start"]=current_epoch
-				debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
+				debate_data[f"{virtual_id}"]["last_paused"]=0
 			
 			# if not(is_pause):
-			# 	debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
+			# 	debate_data[f"{virtual_id}"]["start_from_last_pause"]=False
 			if is_pause:
 				debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
-
+				# debate_data[f"{virtual_id}"]["start_from_last_pause"]=True
 
 			current_status = debate_data[f"{virtual_id}"]["is_debate_running"]
 			update_status = True if is_pause else False
@@ -280,9 +280,24 @@ class RedisServices:
 			debate_data = json.loads(data)
 			startedTime =  debate_data[f"{virtual_id}"]["count_down_start"]
 			lastPauseTime = debate_data[f"{virtual_id}"]["last_paused"]
+			# start_from_last_pause = debate_data[f"{virtual_id}"]["start_from_last_pause"]
 			return {"status":True,"startedTime":startedTime,"lastPauseTime":lastPauseTime}
 		return {"status":False,"startedTime":startedTime}
 
+	@staticmethod
+	async def set_start_from_last_pause(virtual_id):
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		try:
+			if exists:
+				data = await redis.get(virtual_id)
+				debate_data = json.loads(data)
+				debate_data[f"{virtual_id}"]["start_from_last_pause"] = False
+				await redis.set(virtual_id, json.dumps(debate_data))
+				await redis.close()
+				return {"status":True}
+		except Exception as e:
+			raise e
 
 	@staticmethod
 	async def resetDebateTime(virtual_id):

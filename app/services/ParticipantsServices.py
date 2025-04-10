@@ -12,8 +12,7 @@ class ParticipantsService:
 
 	@staticmethod
 	async def create_participants_service(data,db,user):
-		try:
-			# import pdb;pdb.set_trace()			
+		try:			
 			user_id = user.id
 			is_exist = await ParticipantsService.check_if_user_already_joined(user_id,db)
 			if is_exist['status']:
@@ -139,4 +138,8 @@ class ParticipantsService:
 		team_name = teamDetails.team_name
 		team_id = teamDetails.team_id
 		return team_id,team_name
+	
+	@staticmethod
+	async def get_team_debate_times():
+		pass
 
