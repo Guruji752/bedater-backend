@@ -118,6 +118,3 @@ class DebateServices:
 		debateType = db.query(DebateTypeMaster).filter(DebateTypeMaster.id.in_(allowedDebates)).all()
 		return {"status":True,"msg":"","data":jsonable_encoder(debateType)}
 		#############################
-
-
-
