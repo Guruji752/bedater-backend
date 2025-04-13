@@ -170,10 +170,11 @@ async def get_participant_mediator_screen_timer(sid,data):
         db=SessionLocal()
         user = active_users.get(sid)
         topic_id = data.get('topic_id')
+        topic_name = data.get('topic_name')
         virtual_id = user.get("virtual_id")
         debateRoom = user.get("debateRoom")
         debate_id = user.get("debate_id")
-        hour,minute,second,teams_name = await ParticipantsService.get_team_debate_times(virtual_id,debate_id,topic_id,db)
+        hour,minute,second,teams_name = await ParticipantsService.get_team_debate_times(virtual_id,debate_id,topic_id,topic_name,db)
         await sio.emit("get_participant_mediator_screen_timer_receiver",{"timer":{"hour":hour,"minute":minute,"second":second},"team_name":teams_name,"status":True},room=debateRoom)
     except Exception as e:
         raise e
@@ -202,8 +203,8 @@ async def set_debate_timer_and_status(sid,data):
         if not user:
             await sio.emit("error", {"message": "Unauthorized"})
             return
-        user_details = user.get('user')
-        virtual_id = user.get('virtual_id')
+        # user_details = user.get('user')
+        # virtual_id = user.get('virtual_id')
         # room_id = user.get("room_id")
         # if not room_id:
         #     await sio.emit("error", {"message": "Room ID not found"})
@@ -219,6 +220,42 @@ async def set_debate_timer_and_status(sid,data):
     finally:
         print("DB connection closed")
         db.close()
+
+
+@sio.event
+async def set_team_last_pause_and_current_status(sid,data):
+    '''
+    This Function will be use to set the last pause time 
+    of particular team and current status of topic
+
+    current status of topic would be : 'is_pause:True/False'
+    complete status:'is_complete:False/True' by default:False
+    '''
+    '''
+    args: is_pause:(default False),is_refresh:(default False)
+    '''
+    db=SessionLocal()
+    user = active_users.get(sid)
+    user_details = user.get('user')
+
+    is_pause = data.get("is_pause")
+    user_details = user.get('user')
+    virtual_id = user.get("virtual_id")
+    debateRoom = user.get("debateRoom")
+    debate_id = user.get("debate_id")
+    if not user:
+        await sio.emit("error", {"message": "Unauthorized"})
+        return
+
+
+    
+    
+
+
+
+
+
+
 
 @sio.event
 async def current_debate_remaining_time(sid,data):

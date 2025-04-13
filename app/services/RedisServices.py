@@ -332,17 +332,21 @@ class RedisServices:
 	async def set_participant_time_details(virtual_id,team_name,debate_type,topic_name):
 		redis = await get_redis_connection()
 		exists = await redis.exists(virtual_id)
+		# import pdb;pdb.set_trace()
 		if exists:
 			data = await redis.get(virtual_id)
 			debate_data = json.loads(data)
 			for team in team_name:
 				team_details = debate_data[f"{virtual_id}"][team][debate_type]
 				if topic_name not in team_details.keys():
+					# import pdb;pdb.set_trace()
 					debate_data[f"{virtual_id}"][team][debate_type][topic_name]={}
 					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["is_pause"]=True
 					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["last_paused"]=0
 					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["is_completed"]=False
-
+			# import pdb;pdb.set_trace()
+			await redis.set(virtual_id, json.dumps(debate_data))
+			await redis.close()
 			return {"status":True}
 		return {"status":False}
 
