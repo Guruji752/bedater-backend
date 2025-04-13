@@ -308,6 +308,7 @@ class RedisServices:
 			debate_data = json.loads(data)
 			debate_data[f"{virtual_id}"]["count_down_start"]=0
 			debate_data[f"{virtual_id}"]["last_paused"]=0
+			debate_data[f"{virtual_id}"]["is_debate_running"]=False
 			await redis.set(virtual_id, json.dumps(debate_data))
 			await redis.close()
 			return {"status":True}
@@ -328,21 +329,30 @@ class RedisServices:
 		return {"current_status":None,"msg":"Debate is not started yet"}
 
 	@staticmethod
-	async def set_participant_time_details(virtual_id,team,debate_type,topic_id,db):
+	async def set_participant_time_details(virtual_id,team_name,debate_type,topic_name):
 		redis = await get_redis_connection()
 		exists = await redis.exists(virtual_id)
 		if exists:
 			data = await redis.get(virtual_id)
 			debate_data = json.loads(data)
-			team_details = debate_data[f"{virtual_id}"][team][debate_type]
-			if topic not in team_details.keys():
-				team_details[topic_id]={"last_paused":0}
-			await redis.set(virtual_id, json.dumps(debate_data))
-			await redis.close()
-			# if topic in teams_details.keys():
-			# 	team_details[topic]={"last_paused":int(time.time())}
+			for team in teams_name:
+				team_details = debate_data[f"{virtual_id}"][team][debate_type]
+				if topic_name not in team_details.keys():
+					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["is_pause"]=True
+					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["last_paused"]=0
+					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["is_completed"]=False
+
 			return {"status":True}
 		return {"status":False}
+
+			# if topic not in team_details.keys():
+			# 	team_details[topic_id]={"last_paused":0}
+			# await redis.set(virtual_id, json.dumps(debate_data))
+			# await redis.close()
+			# if topic in teams_details.keys():
+			# 	team_details[topic]={"last_paused":int(time.time())}
+		# 	return {"status":True}
+		# return {"status":False}
 
 
 
