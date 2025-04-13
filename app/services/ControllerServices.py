@@ -36,6 +36,7 @@ class ControllerServices:
 			# import pdb;pdb.set_trace()
 			debate = db.query(DebateMaster).filter(DebateMaster.room_id == room_id).first()
 			debate_id = debate.id
+			# import pdb;pdb.set_trace()
 			if_exist = db.query(DebateTrackerMaster).filter(DebateTrackerMaster.debate_id == debate_id,DebateTrackerMaster.is_active==True).first()
 			if if_exist:
 				return {"msg":"Debate is already running","status":True,"virtual_id":if_exist.virtual_id,"debate_id":if_exist.debate_id}

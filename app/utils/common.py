@@ -60,4 +60,21 @@ def string_to_bool(string_bool):
     return False
   else:
     raise ValueError(f"Invalid boolean string: {string_bool}")
+def get_debate_type(debate_id,db):
+	try:
+		debate = db.query(DebateMaster).filter(DebateMaster.id == debate_id,DebateMaster.is_active == True).first()
+		debate_type = debate.debate_type.type
+		return debate_type
+	except Exception as e:
+		raise e
+
+
+def get_debate_team_name(debate_id,db):
+	try:
+		team = db.query(DebateParticipantTeamsDetailsMaster.team_name).filter(DebateParticipantTeamsDetailsMaster.debate_id == debate_id,DebateParticipantTeamsDetailsMaster.is_active == True).all()
+		team_names = [t[0] for t in team]
+		return team_names
+	except Exception as e:
+		raise e
+
 

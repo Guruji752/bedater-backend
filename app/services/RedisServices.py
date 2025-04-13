@@ -35,8 +35,8 @@ class RedisServices:
 				teams = db.query(DebateParticipantTeamsDetailsMaster.team_name).filter(DebateParticipantTeamsDetailsMaster.debate_id == debate_id,DebateParticipantTeamsDetailsMaster.is_active==True).all() 
 				team_1,team_2 = [i[0] for i in teams]
 				default_data = {f"{virtual_id}":{"count_down_start":0,"last_paused":0,"is_debate_running":True,"selected_topic":"","completed_topic":[],"total_viewer":0,"winner_team":"","is_mediator_joined":True}}
-				default_data[f"{virtual_id}"][team_1]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{}}
-				default_data[f"{virtual_id}"][team_2]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{}}
+				default_data[f"{virtual_id}"][team_1]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{},"FREESTYLE":{},"INTERMEDIATE":{},"ADVANCE":{}}
+				default_data[f"{virtual_id}"][team_2]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{},"FREESTYLE":{},"INTERMEDIATE":{},"ADVANCE":{}}
 				await redis.set(virtual_id, json.dumps(default_data))
 			data = await redis.get(virtual_id)
 			debate_data = json.loads(data)
@@ -326,6 +326,26 @@ class RedisServices:
 			status = debate_data[f"{virtual_id}"]["is_debate_running"]
 			return {"current_status":status,"msg":"Debate Started!"}
 		return {"current_status":None,"msg":"Debate is not started yet"}
+
+	@staticmethod
+	async def set_participant_time_details(virtual_id,team,debate_type,topic_id,db):
+		redis = await get_redis_connection()
+		exists = await redis.exists(virtual_id)
+		if exists:
+			data = await redis.get(virtual_id)
+			debate_data = json.loads(data)
+			team_details = debate_data[f"{virtual_id}"][team][debate_type]
+			if topic not in team_details.keys():
+				team_details[topic_id]={"last_paused":0}
+			await redis.set(virtual_id, json.dumps(debate_data))
+			await redis.close()
+			# if topic in teams_details.keys():
+			# 	team_details[topic]={"last_paused":int(time.time())}
+			return {"status":True}
+		return {"status":False}
+
+
+
 
 
 

@@ -5,9 +5,11 @@ from fastapi.encoders import jsonable_encoder
 from fastapi import HTTPException, status
 from app.models.debate.DebateParticipantDetail import DebateParticipantDetail
 from app.models.debate.DebateTrackerMaster import DebateTrackerMaster
-from app.utils.common import get_room_id_of_debate,get_virtual_id_fk
+from app.utils.common import get_room_id_of_debate,get_virtual_id_fk,get_debate_type,get_debate_team_name
 from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticipantTeamsDetailsMaster
 from app.utils.common import get_virtual_id_fk
+from app.models.debate.AdvanceDebateTopicTimeMaster import AdvanceDebateTopicTimeMaster
+from app.models.debate.AdvanceDebateDetailsMaster import AdvanceDebateDetailsMaster
 class ParticipantsService:
 
 	@staticmethod
@@ -140,6 +142,53 @@ class ParticipantsService:
 		return team_id,team_name
 	
 	@staticmethod
-	async def get_team_debate_times():
-		pass
+	async def get_team_debate_times(virtual_id,debate_id,topic_id,db):
+		debate_type = get_debate_type(debate_id,db)
+		# await RedisServices.set_participant_time_details(virtual_id,debate_type,topic_id)
+		if debate_type == "ADVANCE":
+			return await ParticipantsService.get_advance_debate_topic_time(debate_id,topic_id,db)
+		if debate_type == 'FREESTYLE':
+			return await ParticipantsService.get_freestyle_intermediate_topic_time(debate_id,db)
+		if debate_type == 'INTERMEDIATE':
+			return await ParticipantsService.get_freestyle_intermediate_topic_time(debate_id,db)
+
+	@staticmethod
+	async def get_advance_debate_topic_time(debate_id,topic_id,db):
+		topicTimer = db.query(AdvanceDebateTopicTimeMaster).filter(AdvanceDebateTopicTimeMaster.debate_id == debate_id,AdvanceDebateTopicTimeMaster.topic_id == topic_id).first()
+		hour,minute,second = topicTimer.hour,topicTimer.minute,topicTimer.seconds
+		## Check team Side ###
+		advanceDebateDetails = db.query(AdvanceDebateDetailsMaster).filter(AdvanceDebateDetailsMaster.topic_id == topicTimer.topic_id,AdvanceDebateDetailsMaster.debate_id == debate_id).first()
+		team_id = advanceDebateDetails.team_id
+		debateParticipantTeamDetailsMaster = db.query(DebateParticipantTeamsDetailsMaster).filter(DebateParticipantTeamsDetailsMaster.team_id == team_id,DebateParticipantTeamsDetailsMaster.debate_id == debate_id).first()
+		team_name = debateParticipantTeamDetailsMaster.team_name
+		return hour,minute,second,[team_name]
+	@staticmethod
+	async def get_freestyle_intermediate_topic_time(debate_id,db):
+		return await ParticipantsService.get_debate_half_time(debate_id,db)
+
+	@staticmethod
+	async def get_debate_half_time(debate_id,db):
+		debate = db.query(DebateMaster).filter(DebateMaster).filter(DebateMaster.id == debate_id,DebateMaster.is_active == True).first()
+		hour,minute,second = int(debate.hour),int(debate.minute),int(debate.seconds)
+		total_duration_seconds = hour * 3600 + minute * 60 + second
+		half_time = total_duration_seconds//2
+		hour = remaining_seconds // 3600
+		remaining_seconds %= 3600
+		minute = remaining_seconds // 60
+		second = remaining_seconds % 60
+		if hour <= 0 and minute <= 0 and second <= 0:
+			hour = 0
+			minute = 0
+			second = 0
+		teams_name = get_debate_team_name
+		return hour,minute,second,teams_name
+
+
+
+
+
+
+
+
+
 
