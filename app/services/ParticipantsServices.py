@@ -10,6 +10,7 @@ from app.models.debate.DebateParticipantTeamsDetailsMaster import DebateParticip
 from app.utils.common import get_virtual_id_fk
 from app.models.debate.AdvanceDebateTopicTimeMaster import AdvanceDebateTopicTimeMaster
 from app.models.debate.AdvanceDebateDetailsMaster import AdvanceDebateDetailsMaster
+from app.services.RedisServices import RedisServices
 class ParticipantsService:
 
 	@staticmethod
@@ -142,16 +143,22 @@ class ParticipantsService:
 		return team_id,team_name
 	
 	@staticmethod
-	async def get_team_debate_times(virtual_id,debate_id,topic_id,db):
+	async def get_team_debate_times(virtual_id,debate_id,topic_id,topic_name,db):
 		debate_type = get_debate_type(debate_id,db)
+		# import pdb;pdb.set_trace()
 		# await RedisServices.set_participant_time_details(virtual_id,debate_type,topic_id)
 		if debate_type == "ADVANCE":
-			return await ParticipantsService.get_advance_debate_topic_time(debate_id,topic_id,db)
+			hour,minute,second,teams_name = await ParticipantsService.get_advance_debate_topic_time(debate_id,topic_id,db)
+			await RedisServices.set_participant_time_details(virtual_id,teams_name,debate_type,topic_name)
+			return hour,minute,second,teams_name
 		if debate_type == 'FREESTYLE':
-			return await ParticipantsService.get_freestyle_intermediate_topic_time(debate_id,db)
+			hour,minute,second,teams_name = await ParticipantsService.get_freestyle_intermediate_topic_time(debate_id,db)
+			await RedisServices.set_participant_time_details(virtual_id,teams_name,debate_type,topic_name)
+			return hour,minute,second,teams_name
 		if debate_type == 'INTERMEDIATE':
-			return await ParticipantsService.get_freestyle_intermediate_topic_time(debate_id,db)
-
+			hour,minute,second,teams_name =  await ParticipantsService.get_freestyle_intermediate_topic_time(debate_id,db)
+			await RedisServices.set_participant_time_details(virtual_id,teams_name,debate_type,topic_name)
+			return hour,minute,second,teams_name
 	@staticmethod
 	async def get_advance_debate_topic_time(debate_id,topic_id,db):
 		topicTimer = db.query(AdvanceDebateTopicTimeMaster).filter(AdvanceDebateTopicTimeMaster.debate_id == debate_id,AdvanceDebateTopicTimeMaster.topic_id == topic_id).first()
@@ -180,7 +187,7 @@ class ParticipantsService:
 			hour = 0
 			minute = 0
 			second = 0
-		teams_name = get_debate_team_name
+		teams_name = get_debate_team_name(debate_id,db)
 		return hour,minute,second,teams_name
 
 
