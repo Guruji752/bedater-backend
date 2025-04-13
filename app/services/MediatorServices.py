@@ -36,6 +36,7 @@ class MediatorServices:
                 is_selected = True if t.topic.topic in selected_topic else False
                 is_pending = True if not (is_complete or is_selected) else False
                 data.append({
+                    "id":t.id,
                     "title": t.topic.topic,
                     "hour": hour,
                     "minute": minute,
