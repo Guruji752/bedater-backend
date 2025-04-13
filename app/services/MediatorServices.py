@@ -29,14 +29,15 @@ class MediatorServices:
         topics = db.query(TopicMaster).filter(TopicMaster.debate_id == debate_id).all()
         Topic = []
 
-        def add_topics(topic_list,debate_id=debate_id,virtual_id=virtual_id,hour=0, minute=0, second=0):
+        def add_topics(topic_list,debate_type,debate_id=debate_id,virtual_id=virtual_id,hour=0, minute=0, second=0):
             data = []
             for t in topic_list:
                 is_complete = True if t.topic.topic in completed_topic else False
                 is_selected = True if t.topic.topic in selected_topic else False
                 is_pending = True if not (is_complete or is_selected) else False
+                _topic_id = t.id if debate_type != DebateType.ADVANCE.value else t.topic_id
                 data.append({
-                    "id":t.id,
+                    "id":_topic_id,
                     "title": t.topic.topic,
                     "hour": hour,
                     "minute": minute,
@@ -49,13 +50,13 @@ class MediatorServices:
                 })
             return data
         if debate_type in {DebateType.FREESTYLE.value, DebateType.INTERMEDIATE.value}:
-            Topic.extend(add_topics(topics))
+            Topic.extend(add_topics(topics,debate_type))
         elif debate_type == DebateType.ADVANCE.value:
             advance_topics = db.query(AdvanceDebateTopicTimeMaster).filter(
                 AdvanceDebateTopicTimeMaster.debate_id == debate_id
             ).all()
             for t in advance_topics:
-            	data = add_topics(advance_topics, hour=t.hour , minute=t.minute , second=t.seconds)
+            	data = add_topics(advance_topics,debate_type, hour=t.hour , minute=t.minute , second=t.seconds)
 
             Topic.extend(
                 data
@@ -81,16 +82,19 @@ class MediatorServices:
         ####
         # CASE 1 ### Debate Not started and user keep refresh or First time Load #is_Pause : True
         if is_refresh and is_pause and (not debateTime["startedTime"]):
+            print("CASE1")
             return total_hour, total_minute, total_second
         #######
 
         #### CASE 2 ### Debate Started and user keeps refresh ### is_pause:False
         if is_refresh and (not is_pause):
+            print("CASE2")
             current_epoch = int(time.time())      
         #######
 
         #### CASE 3 ### Debate Pause and User Keeps Refresh ##is_pause:True
         if is_refresh and is_pause:
+            print("CASE3")
             current_epoch = debateTime["lastPauseTime"]
         ####
 
