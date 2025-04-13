@@ -165,6 +165,25 @@ async def get_debate_time(sid,data):
 
 
 @sio.event
+async def get_participant_mediator_screen_timer(sid,data):
+    try:
+        db=SessionLocal()
+        user = active_users.get(sid)
+        topic_id = data.get('topic_id')
+        virtual_id = user.get("virtual_id")
+        debateRoom = user.get("debateRoom")
+        debate_id = user.get("debate_id")
+        hour,minute,second,teams_name = await ParticipantsService.get_team_debate_times(virtual_id,debate_id,topic_id,db)
+        await sio.emit("get_participant_mediator_screen_timer_receiver",{"timer":{"hour":hour,"minute":minute,"second":second},"team_name":teams_name,"status":True},room=debateRoom)
+    except Exception as e:
+        raise e
+    finally:
+        print("DB connection closed")
+        db.close()
+
+
+
+@sio.event
 async def set_debate_timer_and_status(sid,data):
     '''
             This function set time when debate starts
