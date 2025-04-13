@@ -144,7 +144,7 @@ class RedisServices:
 				# debate_data[f"{virtual_id}"]["start_from_last_pause"]=True
 
 			current_status = debate_data[f"{virtual_id}"]["is_debate_running"]
-			update_status = True if is_pause else False
+			update_status = True if not is_pause else False
 			debate_data[f"{virtual_id}"]["is_debate_running"] = update_status
 			await redis.set(virtual_id, json.dumps(debate_data))
 			await redis.close()
@@ -335,9 +335,10 @@ class RedisServices:
 		if exists:
 			data = await redis.get(virtual_id)
 			debate_data = json.loads(data)
-			for team in teams_name:
+			for team in team_name:
 				team_details = debate_data[f"{virtual_id}"][team][debate_type]
 				if topic_name not in team_details.keys():
+					debate_data[f"{virtual_id}"][team][debate_type][topic_name]={}
 					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["is_pause"]=True
 					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["last_paused"]=0
 					debate_data[f"{virtual_id}"][team][debate_type][topic_name]["is_completed"]=False
