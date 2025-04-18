@@ -71,6 +71,7 @@ class MediatorServices:
     async def mediatorDebateTimer(debate_id,virtual_id,is_pause,is_refresh,db):
         
         debateTime= await RedisServices.debateStartTime(virtual_id)
+        print(debateTime,"=======from Redis======")
         if not debateTime["status"]:
             return {"status":False}
         debate = db.query(DebateMaster).filter(DebateMaster.id == debate_id, DebateMaster.is_active == True).first()
@@ -81,6 +82,7 @@ class MediatorServices:
 
         ####
         # CASE 1 ### Debate Not started and user keep refresh or First time Load #is_Pause : True
+        # print(is_refresh,is_pause,"==========")
         if is_refresh and is_pause and (not debateTime["startedTime"]):
             print("CASE1")
             return total_hour, total_minute, total_second
@@ -89,20 +91,28 @@ class MediatorServices:
         #### CASE 2 ### Debate Started and user keeps refresh ### is_pause:False
         if is_refresh and (not is_pause):
             print("CASE2")
-            current_epoch = int(time.time())      
+            current_epoch = int(time.time())
+            if debateTime.get("lastPauseTime") and debateTime.get("lastStartedTime"):
+                pause_duration = debateTime.get("lastStartedTime") - debateTime.get("lastPauseTime")
+                debateTime["startedTime"] += pause_duration
         #######
+
 
         #### CASE 3 ### Debate Pause and User Keeps Refresh ##is_pause:True
         if is_refresh and is_pause:
             print("CASE3")
-            current_epoch = debateTime["lastPauseTime"]
+        #######
+            current_epoch = debateTime.get("lastPauseTime")
         ####
 
         # Calculate total duration in seconds
         total_duration_seconds = total_hour * 3600 + total_minute * 60 + total_second
-          # Set your start time
-        elapsed_seconds = current_epoch - debateTime["startedTime"]    
+               
+        # Set your start time
+        elapsed_seconds = current_epoch - debateTime["startedTime"] 
+        print(debateTime["startedTime"]," debate Start time")   
         # Calculate remaining time
+      
         remaining_seconds = max(0, total_duration_seconds - elapsed_seconds)
         
         # Convert remaining seconds back to hours, minutes, seconds
@@ -119,6 +129,9 @@ class MediatorServices:
         
         # Debug output
         print(f"Total duration: {total_hour}h {total_minute}m {total_second}s")
+        print(debateTime["startedTime"],"debate start time")
+        print(debateTime["lastPauseTime"],"debate last time")
+        print(f"current start {current_epoch}")
         print(f"Elapsed seconds: {elapsed_seconds}")
         print(f"Remaining seconds: {remaining_seconds}")
         print(f"Remaining time: {hour}h {minute}m {second}s")
