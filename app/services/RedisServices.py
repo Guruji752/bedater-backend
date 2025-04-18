@@ -34,7 +34,7 @@ class RedisServices:
 				######### Fetch auto generate team name ########
 				teams = db.query(DebateParticipantTeamsDetailsMaster.team_name).filter(DebateParticipantTeamsDetailsMaster.debate_id == debate_id,DebateParticipantTeamsDetailsMaster.is_active==True).all() 
 				team_1,team_2 = [i[0] for i in teams]
-				default_data = {f"{virtual_id}":{"count_down_start":0,"last_paused":0,"is_debate_running":True,"selected_topic":"","completed_topic":[],"total_viewer":0,"winner_team":"","is_mediator_joined":True}}
+				default_data = {f"{virtual_id}":{"count_down_start":0,"last_paused":0,'last_started':0,"is_debate_running":True,"selected_topic":"","completed_topic":[],"total_viewer":0,"winner_team":"","is_mediator_joined":True}}
 				default_data[f"{virtual_id}"][team_1]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{},"FREESTYLE":{},"INTERMEDIATE":{},"ADVANCE":{}}
 				default_data[f"{virtual_id}"][team_2]={"participants_count":0,"user_ids":[],"counter_used":0,"vote":{},"FREESTYLE":{},"INTERMEDIATE":{},"ADVANCE":{}}
 				await redis.set(virtual_id, json.dumps(default_data))
@@ -136,13 +136,14 @@ class RedisServices:
 			if not count_down_start_value:
 				debate_data[f"{virtual_id}"]["count_down_start"]=current_epoch
 				debate_data[f"{virtual_id}"]["last_paused"]=0
-			
-			# if not(is_pause):
-			# 	debate_data[f"{virtual_id}"]["start_from_last_pause"]=False
 			if is_pause:
-				debate_data[f"{virtual_id}"]["last_paused"]=current_epoch
-				# debate_data[f"{virtual_id}"]["start_from_last_pause"]=True
-
+				last_pause=debate_data[f"{virtual_id}"]["last_paused"]
+				last_started = debate_data[f"{virtual_id}"]["last_started"]
+				epoch_diff = last_started - last_pause
+				current_pause = current_epoch-epoch_diff
+				debate_data[f"{virtual_id}"]["last_paused"]=current_pause
+			if debate_data[f"{virtual_id}"]["last_paused"] and (not is_pause):
+				debate_data[f"{virtual_id}"]["last_started"]=current_epoch
 			current_status = debate_data[f"{virtual_id}"]["is_debate_running"]
 			update_status = True if not is_pause else False
 			debate_data[f"{virtual_id}"]["is_debate_running"] = update_status
@@ -280,8 +281,9 @@ class RedisServices:
 			debate_data = json.loads(data)
 			startedTime =  debate_data[f"{virtual_id}"]["count_down_start"]
 			lastPauseTime = debate_data[f"{virtual_id}"]["last_paused"]
+			lastStartedTime = debate_data[f"{virtual_id}"]["last_started"]
 			# start_from_last_pause = debate_data[f"{virtual_id}"]["start_from_last_pause"]
-			return {"status":True,"startedTime":startedTime,"lastPauseTime":lastPauseTime}
+			return {"status":True,"startedTime":startedTime,"lastPauseTime":lastPauseTime,'lastStartedTime':lastStartedTime}
 		return {"status":False,"startedTime":startedTime}
 
 	@staticmethod
@@ -308,6 +310,7 @@ class RedisServices:
 			debate_data = json.loads(data)
 			debate_data[f"{virtual_id}"]["count_down_start"]=0
 			debate_data[f"{virtual_id}"]["last_paused"]=0
+			debate_data[f"{virtual_id}"]["last_started"]=0
 			debate_data[f"{virtual_id}"]["is_debate_running"]=False
 			await redis.set(virtual_id, json.dumps(debate_data))
 			await redis.close()
